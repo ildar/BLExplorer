@@ -142,10 +142,10 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
         binding.address.text = device.address
 
         val scanRecord = ScanRecord.parseFromBytes(extras.scanRecord)
-        var scanRecordStr = ""
+        val scanRecordStr = StringBuilder()
         if (scanRecord.serviceUuids != null) {
             for (parcelUuid in scanRecord.serviceUuids) {
-                scanRecordStr += parcelUuid.toString() + "\n"
+                scanRecordStr.append("${parcelUuid.toString()}\n")
             }
         }
 
@@ -156,9 +156,9 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
                 .forEach {key ->
                     val p = ManufacturerRecordParserFactory.parse(key, manufacturerSpecificData.get(key), device)
                     if (p == null) {
-                        scanRecordStr += "$key=" + BigInteger(1, manufacturerSpecificData.get(key)).toString(16) + "\n"
+                        scanRecordStr.append("$key=${BigInteger(1, manufacturerSpecificData.get(key)).toString(16)}\n")
                     } else {
-                        scanRecordStr += p.keyDescriptor + " = {\n" + p.toString() + "}\n"
+                        scanRecordStr.append("${p.keyDescriptor} = {\n$p}\n")
                         if (!TextUtils.isEmpty(p.getName(device))) {
                             binding.name.text = p.getName(device)
                         }
@@ -166,10 +166,10 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
                 }
 
         for (parcelUuid in scanRecord.serviceData.keys) {
-            scanRecordStr += "$parcelUuid=" + BigInteger(1, scanRecord.serviceData[parcelUuid]).toString(16) + "\n"
+            scanRecordStr.append("$parcelUuid=${BigInteger(1, scanRecord.serviceData[parcelUuid]).toString(16)}\n")
         }
 
-        binding.scanRecord.text = scanRecordStr
+        binding.scanRecord.text = scanRecordStr.toString()
 
         binding.type.text = DevicePropertiesDescriber.describeType(device)
         binding.bondstate.text = DevicePropertiesDescriber.describeBondState(device)
