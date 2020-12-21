@@ -1,6 +1,5 @@
 package org.ligi.blexplorer.scan
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -46,7 +45,7 @@ class DeviceListActivity : AppCompatActivity() {
             val layoutInflater = LayoutInflater.from(viewGroup.context)
             val binding = ItemDeviceBinding.inflate(layoutInflater, viewGroup, false)
             return DeviceViewHolder(binding)
-                    .apply { installOnClickListener(this@DeviceListActivity) }
+                    .apply { installOnClickListener() }
         }
 
         override fun onBindViewHolder(deviceViewHolder: DeviceViewHolder, i: Int) {
@@ -175,11 +174,11 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
         binding.bondstate.text = DevicePropertiesDescriber.describeBondState(device)
     }
 
-    fun installOnClickListener(activity: Activity) {
+    fun installOnClickListener() {
         itemView.setOnClickListener {
-            val intent = Intent(activity, DeviceServiceExploreActivity::class.java)
+            val intent = Intent(it.context, DeviceServiceExploreActivity::class.java)
             App.device = device
-            activity.startActivity(intent)
+            it.context.startActivity(intent)
         }
     }
 
