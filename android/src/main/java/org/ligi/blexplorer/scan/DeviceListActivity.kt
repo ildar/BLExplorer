@@ -68,15 +68,14 @@ class DeviceListActivity : AppCompatActivity() {
         binding.contentList.layoutManager = LinearLayoutManager(this)
         binding.contentList.adapter = adapter
 
-        val timingsUpdateHandler = Handler()
-
-        timingsUpdateHandler.post(object : Runnable {
-            override fun run() {
-                adapter.notifyDataSetChanged()
-                timingsUpdateHandler.postDelayed(this, 500)
-            }
-        })
-
+        Handler().apply {
+            this.post(object : Runnable {
+                override fun run() {
+                    adapter.notifyDataSetChanged()
+                    this@apply.postDelayed(this, 500)
+                }
+            })
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
