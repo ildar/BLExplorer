@@ -16,6 +16,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.ligi.blexplorer.App
 import org.ligi.blexplorer.HelpActivity
@@ -40,7 +41,7 @@ class DeviceListActivity : AppCompatActivity() {
     internal var devices: MutableMap<BluetoothDevice, DeviceExtras> = HashMap()
     private lateinit var binding : ActivityWithRecyclerBinding
 
-    private inner class DeviceRecycler : androidx.recyclerview.widget.RecyclerView.Adapter<DeviceViewHolder>() {
+    private inner class DeviceRecycler : RecyclerView.Adapter<DeviceViewHolder>() {
         override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): DeviceViewHolder {
             val layoutInflater = LayoutInflater.from(viewGroup.context)
             val binding = ItemDeviceBinding.inflate(layoutInflater, viewGroup, false)
@@ -53,9 +54,7 @@ class DeviceListActivity : AppCompatActivity() {
             deviceViewHolder.applyDevice(bluetoothDevice, devices[bluetoothDevice]!!)
         }
 
-        override fun getItemCount(): Int {
-            return devices.size
-        }
+        override fun getItemCount(): Int = devices.size
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,7 +66,7 @@ class DeviceListActivity : AppCompatActivity() {
         setContentView(binding.root)
         val adapter = DeviceRecycler()
 
-        binding.contentList.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
+        binding.contentList.layoutManager = LinearLayoutManager(this)
         binding.contentList.adapter = adapter
 
         val timingsUpdateHandler = Handler()
@@ -87,7 +86,7 @@ class DeviceListActivity : AppCompatActivity() {
     }
 
     private fun startScan() {
-        bluetooth!!.startLeScan { device, rssi, scanRecord -> devices.put(device, DeviceExtras(scanRecord, rssi)) }
+        bluetooth!!.startLeScan { device, rssi, scanRecord -> devices[device] = DeviceExtras(scanRecord, rssi) }
     }
 
     private val bluetooth: BluetoothAdapter?
@@ -126,8 +125,7 @@ class DeviceListActivity : AppCompatActivity() {
     }
 
     companion object {
-
-        private val REQUEST_ENABLE_BT = 2300
+        private const val REQUEST_ENABLE_BT = 2300
     }
 
 }
