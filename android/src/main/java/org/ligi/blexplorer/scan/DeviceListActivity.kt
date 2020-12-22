@@ -3,23 +3,25 @@ package org.ligi.blexplorer.scan
 import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
-import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.collection.ArrayMap
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.ligi.blexplorer.App
 import org.ligi.blexplorer.HelpActivity
 import org.ligi.blexplorer.R
+import org.ligi.blexplorer.bluetoothController
 import org.ligi.blexplorer.databinding.ActivityWithRecyclerBinding
 import org.ligi.blexplorer.databinding.ItemDeviceBinding
 import org.ligi.blexplorer.services.DeviceServiceExploreActivity
@@ -33,14 +35,12 @@ import java.util.*
 class DeviceListActivity : AppCompatActivity() {
 
 
-    inner class DeviceExtras(val scanRecord: ByteArray, val rssi: Int) {
-        val last_seen: Long = System.currentTimeMillis()
-    }
-
-    internal var devices: MutableMap<BluetoothDevice, DeviceExtras> = HashMap()
     private lateinit var binding : ActivityWithRecyclerBinding
+    private lateinit var viewModel: DeviceListViewModel
 
-    private inner class DeviceRecycler : RecyclerView.Adapter<DeviceViewHolder>() {
+    private class DeviceRecycler : RecyclerView.Adapter<DeviceViewHolder>() {
+        var devices : List<DeviceInfo> = emptyList()
+
         override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): DeviceViewHolder {
             val layoutInflater = LayoutInflater.from(viewGroup.context)
             val binding = ItemDeviceBinding.inflate(layoutInflater, viewGroup, false)
@@ -49,8 +49,8 @@ class DeviceListActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(deviceViewHolder: DeviceViewHolder, i: Int) {
-            val bluetoothDevice = devices.keys.toTypedArray()[i]
-            deviceViewHolder.applyDevice(bluetoothDevice, devices[bluetoothDevice]!!)
+            val bluetoothDeviceInfo = devices[i]
+            deviceViewHolder.applyDevice(bluetoothDeviceInfo)
         }
 
         override fun getItemCount(): Int = devices.size
@@ -68,48 +68,31 @@ class DeviceListActivity : AppCompatActivity() {
         binding.contentList.layoutManager = LinearLayoutManager(this)
         binding.contentList.adapter = adapter
 
-        Handler().apply {
-            this.post(object : Runnable {
-                override fun run() {
-                    adapter.notifyDataSetChanged()
-                    this@apply.postDelayed(this, 500)
-                }
-            })
+        viewModel = ViewModelProvider(this).get(DeviceListViewModel::class.java)
+        viewModel.deviceListData.observe(this) {
+            it ?: run {
+                adapter.devices = emptyList()
+                adapter.notifyDataSetChanged()
+                return@observe
+            }
+            adapter.devices = it
+            adapter.notifyDataSetChanged()
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        startScan()
-    }
-
-    private fun startScan() {
-        bluetooth!!.startLeScan { device, rssi, scanRecord -> devices[device] = DeviceExtras(scanRecord, rssi) }
-    }
-
-    private val bluetooth: BluetoothAdapter?
-        get() = (getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
-
     override fun onResume() {
         super.onResume()
-        if (bluetooth == null) {
+        if (!bluetoothController.isBluetoothAvailable()) {
             AlertDialog.Builder(this)
                     .setMessage(R.string.bluetooth_needed_error_msg)
                     .setTitle(R.string.error)
                     .setPositiveButton(R.string.exit) { _: DialogInterface, _: Int ->
                 this@DeviceListActivity.finish()
             }.show()
-        } else if (!bluetooth!!.isEnabled) {
+        } else if (!bluetoothController.isBluetoothEnabled()) {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
-        } else {
-            startScan()
         }
-    }
-
-    override fun onPause() {
-        bluetooth?.stopLeScan(null)
-        super.onPause()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -128,18 +111,45 @@ class DeviceListActivity : AppCompatActivity() {
 
 }
 
+class DeviceListViewModel : ViewModel() {
+    internal val deviceListData : LiveData<List<DeviceInfo>> = DeviceListLiveData()
+}
+
+private class DeviceListLiveData : LiveData<List<DeviceInfo>>(), BluetoothAdapter.LeScanCallback {
+    private val devices: MutableMap<BluetoothDevice, DeviceInfo> = ArrayMap()
+
+    override fun onActive() {
+        super.onActive()
+        bluetoothController.bluetoothAdapter()?.startLeScan( this)
+    }
+
+    override fun onInactive() {
+        super.onInactive()
+        bluetoothController.bluetoothAdapter()?.stopLeScan(this)
+    }
+
+    override fun onLeScan(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray) {
+        devices[device] = DeviceInfo(device, rssi, scanRecord)
+        postValue(devices.values.toList())
+    }
+}
+
+internal data class DeviceInfo(val bluetoothDevice: BluetoothDevice, val rssi: Int, val scanRecord: ByteArray) {
+    val last_seen: Long = System.currentTimeMillis()
+}
+
 private class DeviceViewHolder(private val binding: ItemDeviceBinding) : RecyclerView.ViewHolder(binding.root) {
 
     lateinit var device: BluetoothDevice
 
-    fun applyDevice(newDevice: BluetoothDevice, extras: DeviceListActivity.DeviceExtras) {
-        device = newDevice
+    fun applyDevice(newDeviceInfo: DeviceInfo) {
+        device = newDeviceInfo.bluetoothDevice
         binding.name.text = if (TextUtils.isEmpty(device.name)) "no name" else device.name
-        binding.rssi.text = "${extras.rssi}db"
-        binding.lastSeen.text = "${(System.currentTimeMillis() - extras.last_seen) / 1000}s"
+        binding.rssi.text = "${newDeviceInfo.rssi}db"
+        binding.lastSeen.text = "${(System.currentTimeMillis() - newDeviceInfo.last_seen) / 1000}s"
         binding.address.text = device.address
 
-        val scanRecord = ScanRecord.parseFromBytes(extras.scanRecord)
+        val scanRecord = ScanRecord.parseFromBytes(newDeviceInfo.scanRecord)
         val scanRecordStr = StringBuilder()
         if (scanRecord.serviceUuids != null) {
             for (parcelUuid in scanRecord.serviceUuids) {

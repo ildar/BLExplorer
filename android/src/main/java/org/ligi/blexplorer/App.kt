@@ -11,6 +11,8 @@ class App : Application() {
     override fun onCreate() {
         TraceDroid.init(this)
         super.onCreate()
+
+        bluetoothController = BluetoothController(this)
     }
 
     companion object {
@@ -20,3 +22,6 @@ class App : Application() {
         var notifyingCharacteristicsUUids: MutableList<UUID> = ArrayList()
     }
 }
+
+internal lateinit var bluetoothController: BluetoothController
+    private set
