@@ -16,7 +16,9 @@ import androidx.collection.ArrayMap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import org.ligi.blexplorer.App
 import org.ligi.blexplorer.HelpActivity
@@ -38,9 +40,7 @@ class DeviceListActivity : AppCompatActivity() {
     private lateinit var binding : ActivityWithRecyclerBinding
     private lateinit var viewModel: DeviceListViewModel
 
-    private class DeviceRecycler : RecyclerView.Adapter<DeviceViewHolder>() {
-        var devices : List<DeviceInfo> = emptyList()
-
+    private class DeviceRecycler : ListAdapter<DeviceInfo, DeviceViewHolder>(DeviceListDiffCallback()) {
         override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): DeviceViewHolder {
             val layoutInflater = LayoutInflater.from(viewGroup.context)
             val binding = ItemDeviceBinding.inflate(layoutInflater, viewGroup, false)
@@ -49,11 +49,9 @@ class DeviceListActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(deviceViewHolder: DeviceViewHolder, i: Int) {
-            val bluetoothDeviceInfo = devices[i]
+            val bluetoothDeviceInfo = getItem(i)
             deviceViewHolder.applyDevice(bluetoothDeviceInfo)
         }
-
-        override fun getItemCount(): Int = devices.size
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,15 +67,7 @@ class DeviceListActivity : AppCompatActivity() {
         binding.contentList.adapter = adapter
 
         viewModel = ViewModelProvider(this).get(DeviceListViewModel::class.java)
-        viewModel.deviceListData.observe(this) {
-            it ?: run {
-                adapter.devices = emptyList()
-                adapter.notifyDataSetChanged()
-                return@observe
-            }
-            adapter.devices = it
-            adapter.notifyDataSetChanged()
-        }
+        viewModel.deviceListData.observe(this) { adapter.submitList(it) }
     }
 
     override fun onResume() {
@@ -109,6 +99,17 @@ class DeviceListActivity : AppCompatActivity() {
         private const val REQUEST_ENABLE_BT = 2300
     }
 
+}
+
+private class DeviceListDiffCallback : DiffUtil.ItemCallback<DeviceInfo>() {
+    override fun areItemsTheSame(oldItem: DeviceInfo, newItem: DeviceInfo): Boolean =
+            oldItem.bluetoothDevice == newItem.bluetoothDevice
+
+    override fun areContentsTheSame(oldItem: DeviceInfo, newItem: DeviceInfo): Boolean {
+        if(oldItem.rssi != newItem.rssi) return false
+        if(!oldItem.scanRecord.contentEquals(newItem.scanRecord)) return false
+        return oldItem.last_seen == newItem.last_seen
+    }
 }
 
 class DeviceListViewModel : ViewModel() {
