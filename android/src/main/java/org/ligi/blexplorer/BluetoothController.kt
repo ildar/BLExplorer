@@ -1,5 +1,6 @@
 package org.ligi.blexplorer
 
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 
@@ -13,5 +14,5 @@ internal class BluetoothController(context: Context) {
         return bluetoothManager.adapter.isEnabled
     }
 
-    fun bluetoothAdapter() = bluetoothManager.adapter
+    fun bluetoothAdapter() : BluetoothAdapter? = bluetoothManager.adapter
 }
