@@ -12,7 +12,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.collection.ArrayMap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -113,26 +112,7 @@ private class DeviceListDiffCallback : DiffUtil.ItemCallback<DeviceInfo>() {
 }
 
 class DeviceListViewModel : ViewModel() {
-    internal val deviceListData : LiveData<List<DeviceInfo>> = DeviceListLiveData()
-}
-
-private class DeviceListLiveData : LiveData<List<DeviceInfo>>(), BluetoothAdapter.LeScanCallback {
-    private val devices: MutableMap<BluetoothDevice, DeviceInfo> = ArrayMap()
-
-    override fun onActive() {
-        super.onActive()
-        bluetoothController.bluetoothAdapter()?.startLeScan( this)
-    }
-
-    override fun onInactive() {
-        super.onInactive()
-        bluetoothController.bluetoothAdapter()?.stopLeScan(this)
-    }
-
-    override fun onLeScan(device: BluetoothDevice, rssi: Int, scanRecord: ByteArray) {
-        devices[device] = DeviceInfo(device, rssi, scanRecord)
-        postValue(devices.values.toList())
-    }
+    internal val deviceListData : LiveData<List<DeviceInfo>> = bluetoothController.deviceListLiveData
 }
 
 internal data class DeviceInfo(val bluetoothDevice: BluetoothDevice, val rssi: Int, val scanRecord: ByteArray) {
