@@ -27,7 +27,7 @@ internal class BluetoothController(context: Context) {
 
     internal fun bluetoothAdapter() : BluetoothAdapter? = bluetoothManager.adapter
 
-    internal val deviceListLiveData : LiveData<List<DeviceInfo>> = DeviceListLiveData()
+    internal fun deviceListLiveData() : LiveData<List<DeviceInfo>> = DeviceListLiveData()
 }
 
 private class DeviceListLiveData : LiveData<List<DeviceInfo>>() {
