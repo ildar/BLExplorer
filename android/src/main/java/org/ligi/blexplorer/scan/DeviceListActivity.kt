@@ -17,6 +17,9 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.polidea.rxandroidble2.RxBleClient
+import io.reactivex.BackpressureStrategy
+import io.reactivex.disposables.Disposable
 import org.ligi.blexplorer.App
 import org.ligi.blexplorer.HelpActivity
 import org.ligi.blexplorer.R
@@ -64,13 +67,16 @@ class DeviceListActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this).get(DeviceListViewModel::class.java)
         viewModel.deviceListData.observe(this) { adapter.submitList(it) }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (!bluetoothController.isBluetoothEnabled()) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+        viewModel.bluetoothStateLiveData.observe(this) { state ->
+            @Suppress("NON_EXHAUSTIVE_WHEN")
+            when(state) {
+                RxBleClient.State.BLUETOOTH_NOT_ENABLED -> {
+                    if (!bluetoothController.isBluetoothEnabled()) {
+                        val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+                    }
+                }
+            }
         }
     }
 
@@ -103,6 +109,23 @@ private class DeviceListDiffCallback : DiffUtil.ItemCallback<DeviceInfo>() {
 
 class DeviceListViewModel : ViewModel() {
     internal val deviceListData : LiveData<List<DeviceInfo>> = bluetoothController.deviceListLiveData()
+    internal val bluetoothStateLiveData : LiveData<RxBleClient.State> = BluetoothStateChangeLiveData()
+}
+
+private class BluetoothStateChangeLiveData : LiveData<RxBleClient.State>() {
+    private var disposable : Disposable? = null
+
+    override fun onActive() {
+        super.onActive()
+        disposable = bluetoothController.bluetoothStateEvents()
+                                        .toFlowable(BackpressureStrategy.LATEST)
+                                        .subscribe { postValue(it) }
+    }
+
+    override fun onInactive() {
+        super.onInactive()
+        disposable?.dispose()
+    }
 }
 
 internal data class DeviceInfo(val bluetoothDevice: BluetoothDevice, val rssi: Int, val scanRecord: ByteArray) {

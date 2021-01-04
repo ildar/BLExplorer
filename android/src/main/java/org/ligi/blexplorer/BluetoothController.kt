@@ -10,6 +10,7 @@ import androidx.lifecycle.LiveData
 import com.polidea.rxandroidble2.RxBleClient
 import com.polidea.rxandroidble2.scan.ScanResult
 import com.polidea.rxandroidble2.scan.ScanSettings
+import io.reactivex.Observable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
 import org.ligi.blexplorer.scan.DeviceInfo
@@ -28,6 +29,11 @@ internal class BluetoothController(context: Context) {
     internal fun bluetoothAdapter() : BluetoothAdapter? = bluetoothManager.adapter
 
     internal fun deviceListLiveData() : LiveData<List<DeviceInfo>> = DeviceListLiveData()
+
+    internal fun bluetoothStateEvents() : Observable<RxBleClient.State> = rxBleClient.observeStateChanges()
+                                                     .startWith(rxBleClient.state)
+                                                     .replay(1)
+                                                     .autoConnect()
 }
 
 private class DeviceListLiveData : LiveData<List<DeviceInfo>>() {
