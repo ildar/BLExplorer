@@ -39,20 +39,6 @@ class DeviceListActivity : AppCompatActivity() {
     private lateinit var binding : ActivityWithRecyclerBinding
     private lateinit var viewModel: DeviceListViewModel
 
-    private class DeviceRecycler : ListAdapter<DeviceInfo, DeviceViewHolder>(DeviceListDiffCallback()) {
-        override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): DeviceViewHolder {
-            val layoutInflater = LayoutInflater.from(viewGroup.context)
-            val binding = ItemDeviceBinding.inflate(layoutInflater, viewGroup, false)
-            return DeviceViewHolder(binding)
-                    .apply { installOnClickListener() }
-        }
-
-        override fun onBindViewHolder(deviceViewHolder: DeviceViewHolder, i: Int) {
-            val bluetoothDeviceInfo = getItem(i)
-            deviceViewHolder.applyDevice(bluetoothDeviceInfo)
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -185,4 +171,17 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
         }
     }
 
+}
+
+private class DeviceRecycler : ListAdapter<DeviceInfo, DeviceViewHolder>(DeviceListDiffCallback()) {
+    override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): DeviceViewHolder {
+        val layoutInflater = LayoutInflater.from(viewGroup.context)
+        val binding = ItemDeviceBinding.inflate(layoutInflater, viewGroup, false)
+        return DeviceViewHolder(binding).apply { installOnClickListener() }
+    }
+
+    override fun onBindViewHolder(deviceViewHolder: DeviceViewHolder, position: Int) {
+        val bluetoothDeviceInfo = getItem(position)
+        deviceViewHolder.applyDevice(bluetoothDeviceInfo)
+    }
 }
