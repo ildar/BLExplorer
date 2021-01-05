@@ -30,6 +30,7 @@ import org.ligi.blexplorer.databinding.ItemDeviceBinding
 import org.ligi.blexplorer.services.DeviceServiceExploreActivity
 import org.ligi.blexplorer.util.DevicePropertiesDescriber
 import org.ligi.blexplorer.util.ManufacturerRecordParserFactory
+import org.ligi.kaxt.startActivityFromClass
 import org.ligi.tracedroid.sending.TraceDroidEmailSender
 import java.math.BigInteger
 
@@ -161,12 +162,10 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
 
     fun installOnClickListener() {
         itemView.setOnClickListener {
-            val intent = Intent(it.context, DeviceServiceExploreActivity::class.java)
             App.device = device
-            it.context.startActivity(intent)
+            it.context.startActivityFromClass(DeviceServiceExploreActivity::class)
         }
     }
-
 }
 
 private class DeviceRecycler : ListAdapter<DeviceInfo, DeviceViewHolder>(DeviceListDiffCallback()) {
