@@ -12,7 +12,6 @@ import com.polidea.rxandroidble2.scan.ScanSettings
 import io.reactivex.Observable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
-import org.ligi.blexplorer.scan.DeviceInfo
 
 internal class BluetoothController(context: Context) {
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -31,6 +30,10 @@ internal class BluetoothController(context: Context) {
                                                      .autoConnect()
 }
 
+internal data class DeviceInfo(val scanResult: ScanResult) {
+    val last_seen: Long = System.currentTimeMillis()
+}
+
 private class DeviceListLiveData : LiveData<List<DeviceInfo>>() {
     private val errorHandler: Consumer<in Throwable> = Consumer {
         Log.e("bluetooth_scan", "Exception occurred while scanning for BLE devices", it)
@@ -38,7 +41,7 @@ private class DeviceListLiveData : LiveData<List<DeviceInfo>>() {
 
     private val scanResultHandler: Consumer<in ScanResult> = Consumer {
         val device = it.bleDevice.bluetoothDevice
-        devices[device] = DeviceInfo(device, it.rssi, it.scanRecord.bytes)
+        devices[device] = DeviceInfo(it)
         postValue(devices.values.toList())
     }
 

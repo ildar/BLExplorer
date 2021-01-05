@@ -21,6 +21,7 @@ import com.polidea.rxandroidble2.RxBleClient
 import io.reactivex.BackpressureStrategy
 import io.reactivex.disposables.Disposable
 import org.ligi.blexplorer.App
+import org.ligi.blexplorer.DeviceInfo
 import org.ligi.blexplorer.HelpActivity
 import org.ligi.blexplorer.R
 import org.ligi.blexplorer.bluetoothController
@@ -29,7 +30,6 @@ import org.ligi.blexplorer.databinding.ItemDeviceBinding
 import org.ligi.blexplorer.services.DeviceServiceExploreActivity
 import org.ligi.blexplorer.util.DevicePropertiesDescriber
 import org.ligi.blexplorer.util.ManufacturerRecordParserFactory
-import org.ligi.blexplorer.util.from_lollipop.ScanRecord
 import org.ligi.tracedroid.sending.TraceDroidEmailSender
 import java.math.BigInteger
 
@@ -84,11 +84,11 @@ class DeviceListActivity : AppCompatActivity() {
 
 private class DeviceListDiffCallback : DiffUtil.ItemCallback<DeviceInfo>() {
     override fun areItemsTheSame(oldItem: DeviceInfo, newItem: DeviceInfo): Boolean =
-            oldItem.bluetoothDevice == newItem.bluetoothDevice
+            oldItem.scanResult.bleDevice.bluetoothDevice == newItem.scanResult.bleDevice.bluetoothDevice
 
     override fun areContentsTheSame(oldItem: DeviceInfo, newItem: DeviceInfo): Boolean {
-        if(oldItem.rssi != newItem.rssi) return false
-        if(!oldItem.scanRecord.contentEquals(newItem.scanRecord)) return false
+        if(oldItem.scanResult.rssi != newItem.scanResult.rssi) return false
+        if(!oldItem.scanResult.scanRecord.bytes.contentEquals(newItem.scanResult.scanRecord.bytes)) return false
         return oldItem.last_seen == newItem.last_seen
     }
 }
@@ -114,26 +114,22 @@ private class BluetoothStateChangeLiveData : LiveData<RxBleClient.State>() {
     }
 }
 
-internal data class DeviceInfo(val bluetoothDevice: BluetoothDevice, val rssi: Int, val scanRecord: ByteArray) {
-    val last_seen: Long = System.currentTimeMillis()
-}
-
 private class DeviceViewHolder(private val binding: ItemDeviceBinding) : RecyclerView.ViewHolder(binding.root) {
 
     lateinit var device: BluetoothDevice
 
     fun applyDevice(newDeviceInfo: DeviceInfo) {
-        device = newDeviceInfo.bluetoothDevice
+        device = newDeviceInfo.scanResult.bleDevice.bluetoothDevice
         binding.name.text = if (TextUtils.isEmpty(device.name)) "no name" else device.name
-        binding.rssi.text = "${newDeviceInfo.rssi}db"
+        binding.rssi.text = "${newDeviceInfo.scanResult.rssi}db"
         binding.lastSeen.text = "${(System.currentTimeMillis() - newDeviceInfo.last_seen) / 1000}s"
         binding.address.text = device.address
 
-        val scanRecord = ScanRecord.parseFromBytes(newDeviceInfo.scanRecord)
+        val scanRecord = newDeviceInfo.scanResult.scanRecord
         val scanRecordStr = StringBuilder()
-        if (scanRecord.serviceUuids != null) {
-            for (parcelUuid in scanRecord.serviceUuids) {
-                scanRecordStr.append("${parcelUuid.toString()}\n")
+        scanRecord.serviceUuids?.let { uuids ->
+            for (parcelUuid in uuids) {
+                scanRecordStr.append("$parcelUuid\n")
             }
         }
 
