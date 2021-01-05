@@ -4,12 +4,11 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattService
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.ViewGroup
-
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
 import net.steamcrafted.loadtoast.LoadToast
 import org.ligi.blexplorer.App
 import org.ligi.blexplorer.R
@@ -34,8 +33,10 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
         binding = ActivityWithRecyclerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        supportActionBar?.subtitle = DevicePropertiesDescriber.getNameOrAddressAsFallback(App.device)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.run {
+            subtitle = DevicePropertiesDescriber.getNameOrAddressAsFallback(App.device)
+            setDisplayHomeAsUpEnabled(true)
+        }
 
         SnackEngage.from(this).withSnack(DefaultRateSnack()).build().engageWhenAppropriate()
 
@@ -75,11 +76,11 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
-        App.gatt?.disconnect()
+        App.gatt.disconnect()
         super.onPause()
     }
 
-    private inner class ServiceRecycler : androidx.recyclerview.widget.RecyclerView.Adapter<ServiceViewHolder>() {
+    private inner class ServiceRecycler : RecyclerView.Adapter<ServiceViewHolder>() {
         override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ServiceViewHolder {
             val layoutInflater = LayoutInflater.from(viewGroup.context)
             val binding = ItemServiceBinding.inflate(layoutInflater, viewGroup, false)
