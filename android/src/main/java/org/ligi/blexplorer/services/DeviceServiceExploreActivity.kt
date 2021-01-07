@@ -1,8 +1,11 @@
 package org.ligi.blexplorer.services
 
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattService
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -16,25 +19,32 @@ import org.ligi.blexplorer.characteristics.CharacteristicActivity
 import org.ligi.blexplorer.databinding.ActivityWithRecyclerBinding
 import org.ligi.blexplorer.databinding.ItemServiceBinding
 import org.ligi.blexplorer.util.DevicePropertiesDescriber
-import org.ligi.kaxt.startActivityFromClass
+import org.ligi.blexplorer.util.KEY_BLUETOOTH_DEVICE
 import org.ligi.snackengage.SnackEngage
 import org.ligi.snackengage.snacks.DefaultRateSnack
 import java.util.*
 
 
-class DeviceServiceExploreActivity : AppCompatActivity() {
+class DeviceServiceExploreActivity() : AppCompatActivity() {
 
     private val serviceList = ArrayList<BluetoothGattService>()
     private lateinit var binding: ActivityWithRecyclerBinding
+    private lateinit var device: BluetoothDevice
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if(!intent.hasExtra(KEY_BLUETOOTH_DEVICE)) {
+            finish()
+            return
+        }
+        device = intent.getParcelableExtra(KEY_BLUETOOTH_DEVICE)
 
         binding = ActivityWithRecyclerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         supportActionBar?.run {
-            subtitle = DevicePropertiesDescriber.getNameOrAddressAsFallback(App.device)
+            subtitle = DevicePropertiesDescriber.getNameOrAddressAsFallback(device)
             setDisplayHomeAsUpEnabled(true)
         }
 
@@ -46,7 +56,7 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
 
         val loadToast = LoadToast(this).setText(getString(R.string.connecting)).show()
 
-        App.device.connectGatt(this@DeviceServiceExploreActivity, false, object : BluetoothGattCallback() {
+        device.connectGatt(this@DeviceServiceExploreActivity, false, object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                 App.gatt = gatt
                 gatt.discoverServices()
@@ -55,7 +65,6 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
             }
 
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-
                 val services = gatt.services
                 serviceList.addAll(services)
                 runOnUiThread {
@@ -89,21 +98,26 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(deviceViewHolder: ServiceViewHolder, i: Int) {
             val service = serviceList[i]
-            deviceViewHolder.applyService(service)
+            deviceViewHolder.applyService(device, service)
         }
 
         override fun getItemCount() = serviceList.size
 
     }
 
+    companion object {
+        fun createIntent(context : Context, device : BluetoothDevice) : Intent = Intent(context, DeviceServiceExploreActivity::class.java)
+                .putExtra(KEY_BLUETOOTH_DEVICE, device)
+    }
 }
 
 private class ServiceViewHolder(private val binding: ItemServiceBinding) : RecyclerView.ViewHolder(binding.root) {
 
-    fun applyService(service: BluetoothGattService) {
+    fun applyService(device: BluetoothDevice, service: BluetoothGattService) {
         itemView.setOnClickListener { v ->
             App.service = service
-            v.context.startActivityFromClass(CharacteristicActivity::class.java)
+            val intent = CharacteristicActivity.createIntent(v.context, device)
+            v.context.startActivity(intent)
         }
         binding.uuid.text = service.uuid.toString()
         binding.type.text = DevicePropertiesDescriber.describeServiceType(service)

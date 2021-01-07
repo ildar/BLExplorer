@@ -20,7 +20,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.polidea.rxandroidble2.RxBleClient
 import io.reactivex.BackpressureStrategy
 import io.reactivex.disposables.Disposable
-import org.ligi.blexplorer.App
 import org.ligi.blexplorer.DeviceInfo
 import org.ligi.blexplorer.HelpActivity
 import org.ligi.blexplorer.R
@@ -30,7 +29,6 @@ import org.ligi.blexplorer.databinding.ItemDeviceBinding
 import org.ligi.blexplorer.services.DeviceServiceExploreActivity
 import org.ligi.blexplorer.util.DevicePropertiesDescriber
 import org.ligi.blexplorer.util.ManufacturerRecordParserFactory
-import org.ligi.kaxt.startActivityFromClass
 import org.ligi.tracedroid.sending.TraceDroidEmailSender
 import java.math.BigInteger
 
@@ -162,8 +160,8 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
 
     fun installOnClickListener() {
         itemView.setOnClickListener {
-            App.device = device
-            it.context.startActivityFromClass(DeviceServiceExploreActivity::class)
+            val intent = DeviceServiceExploreActivity.createIntent(it.context, device)
+            it.context.startActivity(intent)
         }
     }
 }

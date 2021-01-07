@@ -1,10 +1,13 @@
 package org.ligi.blexplorer.characteristics
 
 import android.app.Activity
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -18,6 +21,7 @@ import org.ligi.blexplorer.App
 import org.ligi.blexplorer.databinding.ActivityWithRecyclerBinding
 import org.ligi.blexplorer.databinding.ItemCharacteristicBinding
 import org.ligi.blexplorer.util.DevicePropertiesDescriber
+import org.ligi.blexplorer.util.KEY_BLUETOOTH_DEVICE
 import java.math.BigInteger
 import java.util.*
 
@@ -30,6 +34,12 @@ class CharacteristicActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val device = intent.getParcelableExtra<BluetoothDevice>(KEY_BLUETOOTH_DEVICE)
+        device ?: kotlin.run {
+            finish()
+            return
+        }
+
         binding = ActivityWithRecyclerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -41,7 +51,7 @@ class CharacteristicActivity : AppCompatActivity() {
 
         serviceList = App.service.characteristics
 
-        App.device.connectGatt(this, true, object : BluetoothGattCallback() {
+        device.connectGatt(this, true, object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
 
                 App.gatt = gatt
@@ -116,6 +126,11 @@ class CharacteristicActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         finish()
         return super.onOptionsItemSelected(item)
+    }
+
+    companion object {
+        fun createIntent(context: Context, device : BluetoothDevice): Intent = Intent(context, CharacteristicActivity::class.java)
+                .putExtra(KEY_BLUETOOTH_DEVICE, device)
     }
 }
 
