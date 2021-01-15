@@ -27,7 +27,6 @@ import java.util.*
 
 class DeviceServiceExploreActivity() : AppCompatActivity() {
 
-    private val serviceList = ArrayList<BluetoothGattService>()
     private lateinit var binding: ActivityWithRecyclerBinding
     private lateinit var device: BluetoothDevice
 
@@ -51,7 +50,7 @@ class DeviceServiceExploreActivity() : AppCompatActivity() {
         SnackEngage.from(this).withSnack(DefaultRateSnack()).build().engageWhenAppropriate()
 
         binding.contentList.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
-        val adapter = ServiceRecycler()
+        val adapter = ServiceRecycler(device)
         binding.contentList.adapter = adapter
 
         val loadToast = LoadToast(this).setText(getString(R.string.connecting)).show()
@@ -67,7 +66,7 @@ class DeviceServiceExploreActivity() : AppCompatActivity() {
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
                 val services = gatt.services
                 runOnUiThread {
-                    serviceList.addAll(services)
+                    adapter.serviceList.addAll(services)
                     adapter.notifyDataSetChanged()
                     loadToast.success()
                 }
@@ -89,26 +88,28 @@ class DeviceServiceExploreActivity() : AppCompatActivity() {
         super.onPause()
     }
 
-    private inner class ServiceRecycler : RecyclerView.Adapter<ServiceViewHolder>() {
-        override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ServiceViewHolder {
-            val layoutInflater = LayoutInflater.from(viewGroup.context)
-            val binding = ItemServiceBinding.inflate(layoutInflater, viewGroup, false)
-            return ServiceViewHolder(binding)
-        }
-
-        override fun onBindViewHolder(deviceViewHolder: ServiceViewHolder, i: Int) {
-            val service = serviceList[i]
-            deviceViewHolder.applyService(device, service)
-        }
-
-        override fun getItemCount() = serviceList.size
-
-    }
-
     companion object {
         fun createIntent(context : Context, device : BluetoothDevice) : Intent = Intent(context, DeviceServiceExploreActivity::class.java)
                 .putExtra(KEY_BLUETOOTH_DEVICE, device)
     }
+}
+
+private class ServiceRecycler(private val device: BluetoothDevice) : RecyclerView.Adapter<ServiceViewHolder>() {
+    val serviceList : MutableList<BluetoothGattService> = ArrayList<BluetoothGattService>()
+
+    override fun onCreateViewHolder(viewGroup: ViewGroup, position: Int): ServiceViewHolder {
+        val layoutInflater = LayoutInflater.from(viewGroup.context)
+        val binding = ItemServiceBinding.inflate(layoutInflater, viewGroup, false)
+        return ServiceViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(deviceViewHolder: ServiceViewHolder, position: Int) {
+        val service = serviceList[position]
+        deviceViewHolder.applyService(device, service)
+    }
+
+    override fun getItemCount() = serviceList.size
+
 }
 
 private class ServiceViewHolder(private val binding: ItemServiceBinding) : RecyclerView.ViewHolder(binding.root) {
