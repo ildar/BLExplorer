@@ -66,8 +66,8 @@ class DeviceServiceExploreActivity() : AppCompatActivity() {
 
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
                 val services = gatt.services
-                serviceList.addAll(services)
                 runOnUiThread {
+                    serviceList.addAll(services)
                     adapter.notifyDataSetChanged()
                     loadToast.success()
                 }
