@@ -11,6 +11,8 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import net.steamcrafted.loadtoast.LoadToast
 import org.ligi.blexplorer.App
@@ -66,8 +68,7 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
                 val services = gatt.services
                 runOnUiThread {
-                    adapter.serviceList.addAll(services)
-                    adapter.notifyDataSetChanged()
+                    adapter.submitList(services)
                     loadToast.success()
                 }
                 super.onServicesDiscovered(gatt, status)
@@ -94,9 +95,7 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
     }
 }
 
-private class ServiceRecycler(private val device: BluetoothDevice) : RecyclerView.Adapter<ServiceViewHolder>() {
-    val serviceList : MutableList<BluetoothGattService> = ArrayList<BluetoothGattService>()
-
+private class ServiceRecycler(private val device: BluetoothDevice) : ListAdapter<BluetoothGattService, ServiceViewHolder>(BluetoothGattServiceDiffCallback()) {
     override fun onCreateViewHolder(viewGroup: ViewGroup, position: Int): ServiceViewHolder {
         val layoutInflater = LayoutInflater.from(viewGroup.context)
         val binding = ItemServiceBinding.inflate(layoutInflater, viewGroup, false)
@@ -104,12 +103,20 @@ private class ServiceRecycler(private val device: BluetoothDevice) : RecyclerVie
     }
 
     override fun onBindViewHolder(deviceViewHolder: ServiceViewHolder, position: Int) {
-        val service = serviceList[position]
+        val service = getItem(position)
         deviceViewHolder.applyService(device, service)
     }
+}
 
-    override fun getItemCount() = serviceList.size
+private class BluetoothGattServiceDiffCallback : DiffUtil.ItemCallback<BluetoothGattService>() {
+    override fun areItemsTheSame(oldItem: BluetoothGattService, newItem: BluetoothGattService) = oldItem.uuid == newItem.uuid
 
+    override fun areContentsTheSame(oldItem: BluetoothGattService, newItem: BluetoothGattService): Boolean {
+        val oldDesc = DevicePropertiesDescriber.describeServiceType(oldItem)
+        val newDesc = DevicePropertiesDescriber.describeServiceType(newItem)
+        return oldDesc == newDesc
+        //todo: Add code to check if service name has changed as well, once we remove the need to pass in a Context object to DevicePropertiesDescriber.getServiceName()
+    }
 }
 
 private class ServiceViewHolder(private val binding: ItemServiceBinding) : RecyclerView.ViewHolder(binding.root) {
