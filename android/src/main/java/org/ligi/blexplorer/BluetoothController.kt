@@ -10,7 +10,6 @@ import androidx.lifecycle.MutableLiveData
 import com.polidea.rxandroidble2.RxBleClient
 import com.polidea.rxandroidble2.scan.ScanResult
 import com.polidea.rxandroidble2.scan.ScanSettings
-import io.reactivex.Observable
 
 internal class BluetoothController(context: Context) {
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -39,7 +38,7 @@ internal class BluetoothController(context: Context) {
     private val deviceListData = MutableLiveData<List<DeviceScanResult>>()
     internal val deviceListLiveData : LiveData<List<DeviceScanResult>> = deviceListData
 
-    internal fun bluetoothStateEvents() : Observable<RxBleClient.State> = rxBleClient.observeStateChanges()
+    internal val bluetoothStateEvents = rxBleClient.observeStateChanges()
                                                      .startWith(rxBleClient.state)
                                                      .replay(1)
                                                      .autoConnect()

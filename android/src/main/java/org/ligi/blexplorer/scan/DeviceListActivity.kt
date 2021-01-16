@@ -102,7 +102,7 @@ private class BluetoothStateChangeLiveData : LiveData<RxBleClient.State>() {
 
     override fun onActive() {
         super.onActive()
-        disposable = bluetoothController.bluetoothStateEvents()
+        disposable = bluetoothController.bluetoothStateEvents
                                         .toFlowable(BackpressureStrategy.LATEST)
                                         .subscribe { postValue(it) }
     }
