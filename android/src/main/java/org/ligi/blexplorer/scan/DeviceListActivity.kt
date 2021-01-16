@@ -93,7 +93,7 @@ private class DeviceListDiffCallback : DiffUtil.ItemCallback<DeviceScanResult>()
 }
 
 class DeviceListViewModel : ViewModel() {
-    internal val deviceListData : LiveData<List<DeviceScanResult>> = bluetoothController.deviceListLiveData()
+    internal val deviceListData : LiveData<List<DeviceScanResult>> = bluetoothController.deviceListLiveData
     internal val bluetoothStateLiveData : LiveData<RxBleClient.State> = BluetoothStateChangeLiveData()
 }
 
