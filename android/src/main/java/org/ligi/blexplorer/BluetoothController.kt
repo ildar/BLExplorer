@@ -22,7 +22,7 @@ internal class BluetoothController(context: Context) {
         return bluetoothManager.adapter.isEnabled
     }
 
-    internal fun deviceListLiveData() : LiveData<List<DeviceInfo>> = DeviceListLiveData()
+    internal fun deviceListLiveData() : LiveData<List<DeviceScanResult>> = DeviceListLiveData()
 
     internal fun bluetoothStateEvents() : Observable<RxBleClient.State> = rxBleClient.observeStateChanges()
                                                      .startWith(rxBleClient.state)
@@ -30,22 +30,22 @@ internal class BluetoothController(context: Context) {
                                                      .autoConnect()
 }
 
-internal data class DeviceInfo(val scanResult: ScanResult) {
+internal data class DeviceScanResult(val scanResult: ScanResult) {
     val last_seen: Long = System.currentTimeMillis()
 }
 
-private class DeviceListLiveData : LiveData<List<DeviceInfo>>() {
+private class DeviceListLiveData : LiveData<List<DeviceScanResult>>() {
     private val errorHandler: Consumer<in Throwable> = Consumer {
         Log.e("bluetooth_scan", "Exception occurred while scanning for BLE devices", it)
     }
 
     private val scanResultHandler: Consumer<in ScanResult> = Consumer {
         val device = it.bleDevice.bluetoothDevice
-        devices[device] = DeviceInfo(it)
+        devices[device] = DeviceScanResult(it)
         postValue(devices.values.toList())
     }
 
-    private val devices: MutableMap<BluetoothDevice, DeviceInfo> = ArrayMap()
+    private val devices: MutableMap<BluetoothDevice, DeviceScanResult> = ArrayMap()
     private var disposable : Disposable? = null
 
     override fun onActive() {
