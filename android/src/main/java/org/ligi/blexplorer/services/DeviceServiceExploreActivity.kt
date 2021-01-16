@@ -25,7 +25,7 @@ import org.ligi.snackengage.snacks.DefaultRateSnack
 import java.util.*
 
 
-class DeviceServiceExploreActivity() : AppCompatActivity() {
+class DeviceServiceExploreActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityWithRecyclerBinding
     private lateinit var device: BluetoothDevice
