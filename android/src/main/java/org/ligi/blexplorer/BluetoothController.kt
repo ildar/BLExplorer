@@ -30,6 +30,8 @@ internal class BluetoothController(context: Context) {
                 })
     }
 
+    internal fun getScanResult(device : BluetoothDevice) = deviceMap[device]
+
     fun isBluetoothEnabled() : Boolean {
         bluetoothManager.adapter ?: return false
         return bluetoothManager.adapter.isEnabled

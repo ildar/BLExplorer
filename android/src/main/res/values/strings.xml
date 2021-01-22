@@ -8,5 +8,6 @@
     <string name="bluetooth_needed_error_msg">Bluetooth is needed</string>
     <string name="error">Error</string>
     <string name="exit">Exit</string>
+    <string name="device_connect_failed_dialog_text">Failed to connect to device %1$s</string>
 
 </resources>

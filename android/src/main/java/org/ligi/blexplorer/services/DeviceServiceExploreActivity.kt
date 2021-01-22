@@ -1,22 +1,30 @@
 package org.ligi.blexplorer.services
 
+import android.app.Dialog
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattService
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.polidea.rxandroidble2.RxBleDevice
+import io.reactivex.Completable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import net.steamcrafted.loadtoast.LoadToast
 import org.ligi.blexplorer.App
 import org.ligi.blexplorer.R
+import org.ligi.blexplorer.bluetoothController
 import org.ligi.blexplorer.characteristics.CharacteristicActivity
 import org.ligi.blexplorer.databinding.ActivityWithRecyclerBinding
 import org.ligi.blexplorer.databinding.ItemServiceBinding
@@ -24,13 +32,13 @@ import org.ligi.blexplorer.util.DevicePropertiesDescriber
 import org.ligi.blexplorer.util.KEY_BLUETOOTH_DEVICE
 import org.ligi.snackengage.SnackEngage
 import org.ligi.snackengage.snacks.DefaultRateSnack
-import java.util.*
 
 
 class DeviceServiceExploreActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityWithRecyclerBinding
     private lateinit var device: BluetoothDevice
+    private var gattServicesListDisposable : Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,25 +63,34 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
         val adapter = ServiceRecycler(device)
         binding.contentList.adapter = adapter
 
-        val loadToast = LoadToast(this).setText(getString(R.string.connecting)).show()
+        val rxbleDevice = bluetoothController.getScanResult(device)?.scanResult?.bleDevice
+        rxbleDevice ?: run {
+            finish()
+            return
+        }
 
-        device.connectGatt(this@DeviceServiceExploreActivity, false, object : BluetoothGattCallback() {
-            override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-                App.gatt = gatt
-                gatt.discoverServices()
-                runOnUiThread { loadToast.setText(getString(R.string.discovering)) }
-                super.onConnectionStateChange(gatt, status, newState)
-            }
+        val loadToast = LoadToast(this)
 
-            override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-                val services = gatt.services
-                runOnUiThread {
-                    adapter.submitList(services)
-                    loadToast.success()
-                }
-                super.onServicesDiscovered(gatt, status)
-            }
-        })
+        //todo: Use AutoDispose library to automatically dispose when the activity is destroyed
+        gattServicesListDisposable = Completable.fromAction { loadToast.setText(getString(R.string.connecting)).show() }
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .andThen(rxbleDevice.establishConnection(false))
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext {
+                    Completable.fromAction { loadToast.setText(getString(R.string.discovering)) }
+                            .subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+                }.flatMapSingle { it.discoverServices() }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        { services ->
+                            adapter.submitList(services.bluetoothGattServices)
+                            loadToast.success()
+                        },
+                        { throwable ->
+                            Log.e("ble_discover_services", "Failed to discover services for device ${rxbleDevice.bluetoothDevice.name}", throwable)
+                            supportFragmentManager.beginTransaction().add(ExitOnDismissAlertDialog(rxbleDevice), ExitOnDismissAlertDialog.TAG).commit()
+                        }
+                )
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
@@ -84,9 +101,9 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
         else -> super.onOptionsItemSelected(item)
     }
 
-    override fun onPause() {
-        App.gatt.disconnect()
-        super.onPause()
+    override fun onDestroy() {
+        super.onDestroy()
+        gattServicesListDisposable?.dispose()
     }
 
     companion object {
@@ -130,5 +147,29 @@ private class ServiceViewHolder(private val binding: ItemServiceBinding) : Recyc
         binding.uuid.text = service.uuid.toString()
         binding.type.text = DevicePropertiesDescriber.describeServiceType(service)
         binding.name.text = DevicePropertiesDescriber.getServiceName(itemView.context, service, "unknown")
+    }
+}
+
+class ExitOnDismissAlertDialog(private val rxbleDevice: RxBleDevice) : DialogFragment() {
+    companion object {
+        const val TAG = "exit_on_dismiss_alert_dialog"
+    }
+
+    override fun onCancel(dialog: DialogInterface) {
+        super.onCancel(dialog)
+        requireActivity().finish()
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+        requireActivity().finish()
+    }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return AlertDialog.Builder(requireContext())
+                .setTitle(R.string.error)
+                .setMessage(getString(R.string.device_connect_failed_dialog_text, rxbleDevice.bluetoothDevice.name))
+                .setPositiveButton(android.R.string.ok) { _,_  -> requireActivity().finish() }
+                .create()
     }
 }
