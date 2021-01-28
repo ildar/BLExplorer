@@ -131,12 +131,7 @@ private class ServiceRecycler(private val device: BluetoothDevice) : ListAdapter
 private class BluetoothGattServiceDiffCallback : DiffUtil.ItemCallback<BluetoothGattService>() {
     override fun areItemsTheSame(oldItem: BluetoothGattService, newItem: BluetoothGattService) = oldItem.uuid == newItem.uuid
 
-    override fun areContentsTheSame(oldItem: BluetoothGattService, newItem: BluetoothGattService): Boolean {
-        val oldDesc = DevicePropertiesDescriber.describeServiceType(oldItem)
-        val newDesc = DevicePropertiesDescriber.describeServiceType(newItem)
-        return oldDesc == newDesc
-        //todo: Add code to check if service name has changed as well, once we remove the need to pass in a Context object to DevicePropertiesDescriber.getServiceName()
-    }
+    override fun areContentsTheSame(oldItem: BluetoothGattService, newItem: BluetoothGattService) = true
 }
 
 private class ServiceViewHolder(private val binding: ItemServiceBinding) : RecyclerView.ViewHolder(binding.root) {
