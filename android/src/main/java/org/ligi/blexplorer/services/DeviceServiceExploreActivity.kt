@@ -14,10 +14,14 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.polidea.rxandroidble2.RxBleDevice
+import com.polidea.rxandroidble2.RxBleDeviceServices
+import com.uber.autodispose.AutoDispose
+import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -71,7 +75,10 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
 
         val loadToast = LoadToast(this)
 
-        //todo: Use AutoDispose library to automatically dispose when the activity is destroyed
+        val autoDisposable = AutoDispose.autoDisposable<RxBleDeviceServices>(
+                AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_DESTROY)
+        )
+
         gattServicesListDisposable = Completable.fromAction { loadToast.setText(getString(R.string.connecting)).show() }
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .andThen(rxbleDevice.establishConnection(false))
@@ -81,6 +88,7 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
                             .subscribeOn(AndroidSchedulers.mainThread()).subscribe()
                 }.flatMapSingle { it.discoverServices() }
                 .observeOn(AndroidSchedulers.mainThread())
+                .`as`(autoDisposable)
                 .subscribe(
                         { services ->
                             adapter.submitList(services.bluetoothGattServices)
@@ -99,11 +107,6 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
             true
         }
         else -> super.onOptionsItemSelected(item)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        gattServicesListDisposable?.dispose()
     }
 
     companion object {
