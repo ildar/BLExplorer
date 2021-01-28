@@ -4,11 +4,8 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothProfile
-import android.content.Context
 import android.text.TextUtils
-import org.json.JSONException
-import org.json.JSONObject
-import java.io.IOException
+import com.polidea.rxandroidble2.utils.StandardUUIDsParser
 
 object DevicePropertiesDescriber {
 
@@ -84,17 +81,8 @@ object DevicePropertiesDescriber {
         }
     }
 
-    fun getServiceName(ctx: Context, service: BluetoothGattService, defaultString: String): String {
-        try {
-            val serviceKey = service.uuid.toString().split("-".toRegex()).dropLastWhile(String::isEmpty).toTypedArray()[0]
-            val cleanServiceKey = serviceKey.replaceFirst("^0+(?!$)".toRegex(), "") // remove leading zeroes
-            val jsonObject = JSONObject(ctx.assets.open("services.json").bufferedReader().readText())
-            return jsonObject.getJSONObject(cleanServiceKey).getString("name")
-        } catch (e: IOException) {
-            return defaultString
-        } catch (e: JSONException) {
-            return defaultString
-        }
+    fun getServiceName(service: BluetoothGattService, defaultString: String): String {
+        return StandardUUIDsParser.getServiceName(service.uuid) ?: defaultString
     }
 
     fun connectionStateToString(state: Int) = when (state) {

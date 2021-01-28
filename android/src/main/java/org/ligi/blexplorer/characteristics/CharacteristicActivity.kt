@@ -99,7 +99,7 @@ class CharacteristicActivity : AppCompatActivity() {
     }
 
     private val serviceName: String
-        get() = DevicePropertiesDescriber.getServiceName(this@CharacteristicActivity, App.service, App.service.uuid.toString())
+        get() = DevicePropertiesDescriber.getServiceName(App.service, App.service.uuid.toString())
 
     override fun onPause() {
         App.gatt?.disconnect()

@@ -149,7 +149,7 @@ private class ServiceViewHolder(private val binding: ItemServiceBinding) : Recyc
         }
         binding.uuid.text = service.uuid.toString()
         binding.type.text = DevicePropertiesDescriber.describeServiceType(service)
-        binding.name.text = DevicePropertiesDescriber.getServiceName(itemView.context, service, "unknown")
+        binding.name.text = DevicePropertiesDescriber.getServiceName(service, "unknown")
     }
 }
 
