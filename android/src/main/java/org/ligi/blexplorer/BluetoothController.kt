@@ -1,5 +1,6 @@
 package org.ligi.blexplorer
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.Context
@@ -10,25 +11,15 @@ import androidx.lifecycle.MutableLiveData
 import com.polidea.rxandroidble2.RxBleClient
 import com.polidea.rxandroidble2.scan.ScanResult
 import com.polidea.rxandroidble2.scan.ScanSettings
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 
 internal class BluetoothController(context: Context) {
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val rxBleClient = RxBleClient.create(context)
 
     private val deviceMap: MutableMap<BluetoothDevice, DeviceScanResult> = ArrayMap()
-
-    init {
-        rxBleClient.scanBleDevices(ScanSettings.Builder().build())
-                .subscribe(
-                {
-                    val device = it.bleDevice.bluetoothDevice
-                    deviceMap[device] = DeviceScanResult(it)
-                    deviceListData.postValue(deviceMap.values.toList())
-                },
-                {
-                    Log.e("bluetooth_scan", "Exception occurred while scanning for BLE devices", it)
-                })
-    }
 
     internal fun getScanResult(device : BluetoothDevice) = deviceMap[device]
 
@@ -37,13 +28,50 @@ internal class BluetoothController(context: Context) {
         return bluetoothManager.adapter.isEnabled
     }
 
-    private val deviceListData = MutableLiveData<List<DeviceScanResult>>()
-    internal val deviceListLiveData : LiveData<List<DeviceScanResult>> = deviceListData
-
     internal val bluetoothStateEvents = rxBleClient.observeStateChanges()
                                                      .startWith(rxBleClient.state)
                                                      .replay(1)
                                                      .autoConnect()
+
+    internal val deviceListLiveData : LiveData<List<DeviceScanResult>> = DeviceListLiveData()
+
+    @SuppressLint("CheckResult")
+    private inner class DeviceListLiveData : MutableLiveData<List<DeviceScanResult>>() {
+        private val shouldScanObservable : Observable<Boolean> = bluetoothStateEvents.map { state ->
+            return@map when(state) {
+                RxBleClient.State.BLUETOOTH_NOT_ENABLED,
+                RxBleClient.State.BLUETOOTH_NOT_AVAILABLE,
+                RxBleClient.State.LOCATION_PERMISSION_NOT_GRANTED,
+                RxBleClient.State.LOCATION_SERVICES_NOT_ENABLED -> false
+                RxBleClient.State.READY -> true
+            }
+        }
+
+        private var scanDisposable : Disposable? = null
+
+        init {
+            shouldScanObservable.observeOn(AndroidSchedulers.mainThread())
+                    .subscribe { shouldScan ->
+                        if(shouldScan) {
+                            scanDisposable = rxBleClient.scanBleDevices(ScanSettings.Builder().build())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe({
+                                        val device = it.bleDevice.bluetoothDevice
+                                        deviceMap[device] = DeviceScanResult(it)
+                                        value = deviceMap.values.toList()
+                                    },
+                                    {
+                                        Log.e("bluetooth_scan", "Exception occurred while scanning for BLE devices", it)
+                                    })
+                        } else {
+                            scanDisposable?.dispose()
+//                            deviceMap.clear()
+//                            value = emptyList()
+                            scanDisposable = null
+                        }
+                    }
+        }
+    }
 }
 
 internal data class DeviceScanResult(val scanResult: ScanResult) {
