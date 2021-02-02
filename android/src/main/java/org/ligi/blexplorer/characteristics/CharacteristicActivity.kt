@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import de.cketti.shareintentbuilder.ShareIntentBuilder
 import org.ligi.blexplorer.App
+import org.ligi.blexplorer.R
 import org.ligi.blexplorer.databinding.ActivityWithRecyclerBinding
 import org.ligi.blexplorer.databinding.ItemCharacteristicBinding
 import org.ligi.blexplorer.util.DevicePropertiesDescriber
@@ -107,7 +108,7 @@ class CharacteristicActivity : AppCompatActivity() {
     }
 
 
-    private inner class CharacteristicRecycler : androidx.recyclerview.widget.RecyclerView.Adapter<CharacteristicViewHolder>() {
+    private inner class CharacteristicRecycler : RecyclerView.Adapter<CharacteristicViewHolder>() {
         override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): CharacteristicViewHolder {
             val layoutInflater = LayoutInflater.from(viewGroup.context)
             val binding = ItemCharacteristicBinding.inflate(layoutInflater, viewGroup, false)
@@ -145,7 +146,7 @@ private class CharacteristicViewHolder(private val binding: ItemCharacteristicBi
         if (characteristic.value != null) {
             binding.value.text = getValue(characteristic)
         } else {
-            binding.value.text = "no value read yet"
+            binding.value.text = itemView.context.getString(R.string.gatt_characteristic_no_value_msg)
         }
         binding.type.text = DevicePropertiesDescriber.getProperty(characteristic)
         binding.permissions.text = DevicePropertiesDescriber.getPermission(characteristic) + "  " + characteristic.descriptors.size
