@@ -53,7 +53,8 @@ internal class BluetoothController(context: Context) {
             shouldScanObservable.observeOn(AndroidSchedulers.mainThread())
                     .subscribe { shouldScan ->
                         if(shouldScan) {
-                            scanDisposable = rxBleClient.scanBleDevices(ScanSettings.Builder().build())
+                            val scanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build()
+                            scanDisposable = rxBleClient.scanBleDevices(scanSettings)
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribe({
                                         val device = it.bleDevice.bluetoothDevice
