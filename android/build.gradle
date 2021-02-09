@@ -121,4 +121,7 @@ dependencies {
     implementation 'com.uber.autodispose:autodispose:1.0.0'
     implementation 'com.uber.autodispose:autodispose-android:1.0.0'
     implementation 'com.uber.autodispose:autodispose-android-archcomponents:1.0.0'
+
+    implementation 'com.jakewharton.rx2:replaying-share:2.0.0'
+    implementation 'com.jakewharton.rx2:replaying-share-kotlin:2.0.0'
 }
