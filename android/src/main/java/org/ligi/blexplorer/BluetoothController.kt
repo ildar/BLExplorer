@@ -19,7 +19,7 @@ internal class BluetoothController(context: Context) {
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val rxBleClient = RxBleClient.create(context)
 
-    private val deviceMap: MutableMap<BluetoothDevice, DeviceScanResult> = ArrayMap()
+    private val deviceMap: MutableMap<BluetoothDevice, DeviceInfo> = ArrayMap()
 
     internal fun getScanResult(device : BluetoothDevice) = deviceMap[device]
 
@@ -33,10 +33,10 @@ internal class BluetoothController(context: Context) {
                                                      .replay(1)
                                                      .autoConnect()
 
-    internal val deviceListLiveData : LiveData<List<DeviceScanResult>> = DeviceListLiveData()
+    internal val deviceListLiveData : LiveData<List<DeviceInfo>> = DeviceListLiveData()
 
     @SuppressLint("CheckResult")
-    private inner class DeviceListLiveData : MutableLiveData<List<DeviceScanResult>>() {
+    private inner class DeviceListLiveData : MutableLiveData<List<DeviceInfo>>() {
         private val shouldScanObservable : Observable<Boolean> = bluetoothStateEvents.map { state ->
             return@map when(state) {
                 RxBleClient.State.BLUETOOTH_NOT_ENABLED,
@@ -58,7 +58,7 @@ internal class BluetoothController(context: Context) {
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribe({
                                         val device = it.bleDevice.bluetoothDevice
-                                        deviceMap[device] = DeviceScanResult(it)
+                                        deviceMap[device] = DeviceInfo(it)
                                         value = deviceMap.values.toList()
                                     },
                                     {
@@ -75,6 +75,6 @@ internal class BluetoothController(context: Context) {
     }
 }
 
-internal data class DeviceScanResult(val scanResult: ScanResult) {
+internal data class DeviceInfo(val scanResult: ScanResult) {
     val last_seen: Long = System.currentTimeMillis()
 }

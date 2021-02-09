@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.polidea.rxandroidble2.RxBleClient
 import io.reactivex.BackpressureStrategy
 import io.reactivex.disposables.Disposable
-import org.ligi.blexplorer.DeviceScanResult
+import org.ligi.blexplorer.DeviceInfo
 import org.ligi.blexplorer.HelpActivity
 import org.ligi.blexplorer.R
 import org.ligi.blexplorer.bluetoothController
@@ -81,11 +81,11 @@ class DeviceListActivity : AppCompatActivity() {
 
 }
 
-private class DeviceListDiffCallback : DiffUtil.ItemCallback<DeviceScanResult>() {
-    override fun areItemsTheSame(oldItem: DeviceScanResult, newItem: DeviceScanResult): Boolean =
+private class DeviceListDiffCallback : DiffUtil.ItemCallback<DeviceInfo>() {
+    override fun areItemsTheSame(oldItem: DeviceInfo, newItem: DeviceInfo): Boolean =
             oldItem.scanResult.bleDevice.bluetoothDevice == newItem.scanResult.bleDevice.bluetoothDevice
 
-    override fun areContentsTheSame(oldItem: DeviceScanResult, newItem: DeviceScanResult): Boolean {
+    override fun areContentsTheSame(oldItem: DeviceInfo, newItem: DeviceInfo): Boolean {
         if(oldItem.scanResult.rssi != newItem.scanResult.rssi) return false
         if(!oldItem.scanResult.scanRecord.bytes.contentEquals(newItem.scanResult.scanRecord.bytes)) return false
         return oldItem.last_seen == newItem.last_seen
@@ -93,7 +93,7 @@ private class DeviceListDiffCallback : DiffUtil.ItemCallback<DeviceScanResult>()
 }
 
 class DeviceListViewModel : ViewModel() {
-    internal val deviceListData : LiveData<List<DeviceScanResult>> = bluetoothController.deviceListLiveData
+    internal val deviceListData : LiveData<List<DeviceInfo>> = bluetoothController.deviceListLiveData
     internal val bluetoothStateLiveData : LiveData<RxBleClient.State> = BluetoothStateChangeLiveData()
 }
 
@@ -117,14 +117,14 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
 
     lateinit var device: BluetoothDevice
 
-    fun applyDevice(newDeviceScanResult: DeviceScanResult) {
-        device = newDeviceScanResult.scanResult.bleDevice.bluetoothDevice
+    fun applyDevice(newDeviceInfo: DeviceInfo) {
+        device = newDeviceInfo.scanResult.bleDevice.bluetoothDevice
         binding.name.text = if (TextUtils.isEmpty(device.name)) "no name" else device.name
-        binding.rssi.text = "${newDeviceScanResult.scanResult.rssi}db"
-        binding.lastSeen.text = "${(System.currentTimeMillis() - newDeviceScanResult.last_seen) / 1000}s"
+        binding.rssi.text = "${newDeviceInfo.scanResult.rssi}db"
+        binding.lastSeen.text = "${(System.currentTimeMillis() - newDeviceInfo.last_seen) / 1000}s"
         binding.address.text = device.address
 
-        val scanRecord = newDeviceScanResult.scanResult.scanRecord
+        val scanRecord = newDeviceInfo.scanResult.scanRecord
         val scanRecordStr = StringBuilder()
         scanRecord.serviceUuids?.let { uuids ->
             for (parcelUuid in uuids) {
@@ -166,7 +166,7 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
     }
 }
 
-private class DeviceRecycler : ListAdapter<DeviceScanResult, DeviceViewHolder>(DeviceListDiffCallback()) {
+private class DeviceRecycler : ListAdapter<DeviceInfo, DeviceViewHolder>(DeviceListDiffCallback()) {
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): DeviceViewHolder {
         val layoutInflater = LayoutInflater.from(viewGroup.context)
         val binding = ItemDeviceBinding.inflate(layoutInflater, viewGroup, false)
