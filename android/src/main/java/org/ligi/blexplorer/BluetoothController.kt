@@ -8,12 +8,17 @@ import android.util.Log
 import androidx.collection.ArrayMap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.jakewharton.rx.replayingShare
 import com.polidea.rxandroidble2.RxBleClient
+import com.polidea.rxandroidble2.RxBleConnection
+import com.polidea.rxandroidble2.RxBleDevice
 import com.polidea.rxandroidble2.scan.ScanResult
 import com.polidea.rxandroidble2.scan.ScanSettings
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
+import org.ligi.blexplorer.util.MyOptional
+import java.util.*
 
 internal class BluetoothController(context: Context) {
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -22,6 +27,17 @@ internal class BluetoothController(context: Context) {
     private val deviceMap: MutableMap<BluetoothDevice, DeviceInfo> = ArrayMap()
 
     internal fun getScanResult(device : BluetoothDevice) = deviceMap[device]
+
+    internal fun getConnection(rxbleDevice : RxBleDevice) : Observable<RxBleConnection> {
+        val deviceInfo = deviceMap[rxbleDevice.bluetoothDevice] as DeviceInfo
+        synchronized(deviceInfo) {
+            val newValue = rxbleDevice.establishConnection(false)
+                    .doOnDispose { synchronized(deviceInfo) { deviceInfo.connection.set(null) } }
+                    .replayingShare()
+
+            return deviceInfo.connection.orElseGet(newValue)
+        }
+    }
 
     fun isBluetoothEnabled() : Boolean {
         bluetoothManager.adapter ?: return false
@@ -77,4 +93,6 @@ internal class BluetoothController(context: Context) {
 
 internal data class DeviceInfo(val scanResult: ScanResult) {
     val last_seen: Long = System.currentTimeMillis()
+    val connection = MyOptional<Observable<RxBleConnection>>()
 }
+

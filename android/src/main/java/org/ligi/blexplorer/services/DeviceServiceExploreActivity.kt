@@ -81,7 +81,7 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
 
         gattServicesListDisposable = Completable.fromAction { loadToast.setText(getString(R.string.connecting)).show() }
                 .subscribeOn(AndroidSchedulers.mainThread())
-                .andThen(rxbleDevice.establishConnection(false))
+                .andThen(bluetoothController.getConnection(rxbleDevice))
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext {
                     Completable.fromAction { loadToast.setText(getString(R.string.discovering)) }
