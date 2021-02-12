@@ -16,10 +16,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
+import com.polidea.rxandroidble2.RxBleConnection
+import com.polidea.rxandroidble2.RxBleDevice
 import de.cketti.shareintentbuilder.ShareIntentBuilder
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import org.ligi.blexplorer.App
 import org.ligi.blexplorer.R
+import org.ligi.blexplorer.bluetoothController
 import org.ligi.blexplorer.databinding.ActivityWithRecyclerBinding
 import org.ligi.blexplorer.databinding.ItemCharacteristicBinding
 import org.ligi.blexplorer.util.DevicePropertiesDescriber
@@ -45,6 +51,17 @@ class CharacteristicActivity : AppCompatActivity() {
         val device = intent.getParcelableExtra<BluetoothDevice>(KEY_BLUETOOTH_DEVICE)
         val serviceUUID = intent.getStringExtra(KEY_SERVICE_UUID)
 
+        val deviceInfo = bluetoothController.getDeviceInfo(device)
+        deviceInfo ?: kotlin.run {
+            finish()
+            return
+        }
+
+        ConnectionStateChangeLiveData(deviceInfo.scanResult.bleDevice).observe(this) { newState ->
+            val stateToString = DevicePropertiesDescriber.connectionStateToString(newState, this)
+            supportActionBar?.subtitle = "$serviceName ($stateToString)"
+        }
+
         binding = ActivityWithRecyclerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -58,14 +75,8 @@ class CharacteristicActivity : AppCompatActivity() {
 
         device.connectGatt(this, true, object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-
                 App.gatt = gatt
                 gatt.discoverServices()
-                runOnUiThread {
-                    val stateToString = DevicePropertiesDescriber.connectionStateToString(newState)
-                    supportActionBar?.subtitle = "$serviceName ($stateToString)"
-                }
-
                 super.onConnectionStateChange(gatt, status, newState)
             }
 
@@ -135,6 +146,23 @@ class CharacteristicActivity : AppCompatActivity() {
         fun createIntent(context: Context, device: BluetoothDevice, service: BluetoothGattService): Intent = Intent(context, CharacteristicActivity::class.java)
                 .putExtra(KEY_BLUETOOTH_DEVICE, device)
                 .putExtra(KEY_SERVICE_UUID, service.uuid.toString())
+    }
+}
+
+private class ConnectionStateChangeLiveData(private val rxBleDevice: RxBleDevice) : LiveData<RxBleConnection.RxBleConnectionState>() {
+    private var disposable : Disposable? = null
+
+    override fun onActive() {
+        super.onActive()
+        disposable = rxBleDevice.observeConnectionStateChanges()
+                .startWith(rxBleDevice.connectionState)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { value = it }
+    }
+
+    override fun onInactive() {
+        super.onInactive()
+        disposable?.dispose()
     }
 }
 

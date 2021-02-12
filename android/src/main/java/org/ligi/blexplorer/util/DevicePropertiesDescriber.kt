@@ -3,9 +3,11 @@ package org.ligi.blexplorer.util
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
-import android.bluetooth.BluetoothProfile
+import android.content.Context
 import android.text.TextUtils
+import com.polidea.rxandroidble2.RxBleConnection
 import com.polidea.rxandroidble2.utils.StandardUUIDsParser
+import org.ligi.blexplorer.R
 
 object DevicePropertiesDescriber {
 
@@ -85,13 +87,12 @@ object DevicePropertiesDescriber {
         return StandardUUIDsParser.getServiceName(service.uuid) ?: defaultString
     }
 
-    fun connectionStateToString(state: Int) = when (state) {
-        BluetoothProfile.STATE_DISCONNECTED -> "disconnected"
-        BluetoothProfile.STATE_CONNECTING -> "connecting"
-        BluetoothProfile.STATE_CONNECTED -> "connected"
-        BluetoothProfile.STATE_DISCONNECTING -> "disconnecting"
-        else -> "unknown state:" + state
-
+    fun connectionStateToString(state: RxBleConnection.RxBleConnectionState, context: Context) = when (state) {
+        RxBleConnection.RxBleConnectionState.DISCONNECTED -> context.getString(R.string.disconnected)
+        RxBleConnection.RxBleConnectionState.CONNECTING -> context.getString(R.string.connecting)
+        RxBleConnection.RxBleConnectionState.CONNECTED -> context.getString(R.string.connected)
+        RxBleConnection.RxBleConnectionState.DISCONNECTING -> context.getString(R.string.disconnecting)
+        else -> "${context.getString(R.string.unknown_state)} $state"
     }
     /*
     public static String statusToString(int status) {

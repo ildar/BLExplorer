@@ -5,6 +5,10 @@
 
     <string name="discovering">discovering</string>
     <string name="connecting">connecting</string>
+    <string name="connected">connected</string>
+    <string name="disconnecting">disconnecting</string>
+    <string name="disconnected">disconnected</string>
+    <string name="unknown_state">unknown state:</string>
     <string name="bluetooth_needed_error_msg">Bluetooth is needed</string>
     <string name="error">Error</string>
     <string name="exit">Exit</string>
