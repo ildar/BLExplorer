@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
+import android.bluetooth.BluetoothGattService
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -23,6 +24,8 @@ import org.ligi.blexplorer.databinding.ActivityWithRecyclerBinding
 import org.ligi.blexplorer.databinding.ItemCharacteristicBinding
 import org.ligi.blexplorer.util.DevicePropertiesDescriber
 import org.ligi.blexplorer.util.KEY_BLUETOOTH_DEVICE
+import org.ligi.blexplorer.util.KEY_SERVICE_UUID
+import org.ligi.blexplorer.util.hasAllExtras
 import java.math.BigInteger
 import java.util.*
 
@@ -35,11 +38,12 @@ class CharacteristicActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val device = intent.getParcelableExtra<BluetoothDevice>(KEY_BLUETOOTH_DEVICE)
-        device ?: kotlin.run {
+        if (!intent.hasAllExtras(KEY_BLUETOOTH_DEVICE, KEY_SERVICE_UUID)) {
             finish()
             return
         }
+        val device = intent.getParcelableExtra<BluetoothDevice>(KEY_BLUETOOTH_DEVICE)
+        val serviceUUID = intent.getStringExtra(KEY_SERVICE_UUID)
 
         binding = ActivityWithRecyclerBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -67,14 +71,12 @@ class CharacteristicActivity : AppCompatActivity() {
 
             override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
                 super.onCharacteristicRead(gatt, characteristic, status)
-
                 characteristicUpdate(characteristic, adapter)
 
             }
 
             override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
                 super.onCharacteristicChanged(gatt, characteristic)
-
                 characteristicUpdate(characteristic, adapter)
             }
         })
@@ -130,8 +132,9 @@ class CharacteristicActivity : AppCompatActivity() {
     }
 
     companion object {
-        fun createIntent(context: Context, device : BluetoothDevice): Intent = Intent(context, CharacteristicActivity::class.java)
+        fun createIntent(context: Context, device: BluetoothDevice, service: BluetoothGattService): Intent = Intent(context, CharacteristicActivity::class.java)
                 .putExtra(KEY_BLUETOOTH_DEVICE, device)
+                .putExtra(KEY_SERVICE_UUID, service.uuid.toString())
     }
 }
 

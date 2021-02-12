@@ -139,7 +139,7 @@ private class ServiceViewHolder(private val binding: ItemServiceBinding) : Recyc
     fun applyService(device: BluetoothDevice, service: BluetoothGattService) {
         itemView.setOnClickListener { v ->
             App.service = service
-            val intent = CharacteristicActivity.createIntent(v.context, device)
+            val intent = CharacteristicActivity.createIntent(v.context, device, service)
             v.context.startActivity(intent)
         }
         binding.uuid.text = service.uuid.toString()
