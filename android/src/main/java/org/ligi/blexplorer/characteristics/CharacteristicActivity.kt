@@ -29,7 +29,7 @@ import java.util.*
 
 class CharacteristicActivity : AppCompatActivity() {
 
-    private var serviceList: MutableList<BluetoothGattCharacteristic> = ArrayList()
+    private var characteristicList: MutableList<BluetoothGattCharacteristic> = ArrayList()
     private lateinit var binding : ActivityWithRecyclerBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,7 +50,7 @@ class CharacteristicActivity : AppCompatActivity() {
         val adapter = CharacteristicRecycler()
         binding.contentList.adapter = adapter
 
-        serviceList = App.service.characteristics
+        characteristicList = App.service.characteristics
 
         device.connectGatt(this, true, object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
@@ -82,18 +82,18 @@ class CharacteristicActivity : AppCompatActivity() {
 
     private fun characteristicUpdate(characteristic: BluetoothGattCharacteristic, adapter: CharacteristicRecycler) {
         var found: BluetoothGattCharacteristic? = null
-        for (bluetoothGattCharacteristic in serviceList) {
+        for (bluetoothGattCharacteristic in characteristicList) {
             if (bluetoothGattCharacteristic.uuid == characteristic.uuid) {
                 found = bluetoothGattCharacteristic
             }
         }
 
         if (found == null) {
-            serviceList.add(characteristic)
+            characteristicList.add(characteristic)
             adapter.notifyDataSetChanged()
         } else {
-            val index = serviceList.indexOf(found)
-            serviceList[index] = characteristic
+            val index = characteristicList.indexOf(found)
+            characteristicList[index] = characteristic
             runOnUiThread { adapter.notifyItemChanged(index) }
 
         }
@@ -116,11 +116,11 @@ class CharacteristicActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(deviceViewHolder: CharacteristicViewHolder, i: Int) {
-            deviceViewHolder.applyCharacteristic(serviceList[i])
+            deviceViewHolder.applyCharacteristic(characteristicList[i])
         }
 
         override fun getItemCount(): Int {
-            return serviceList.size
+            return characteristicList.size
         }
     }
 
