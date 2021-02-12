@@ -67,7 +67,7 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
         val adapter = ServiceRecycler(device)
         binding.contentList.adapter = adapter
 
-        val rxbleDevice = bluetoothController.getScanResult(device)?.scanResult?.bleDevice
+        val rxbleDevice = bluetoothController.getDeviceInfo(device)?.scanResult?.bleDevice
         rxbleDevice ?: run {
             finish()
             return

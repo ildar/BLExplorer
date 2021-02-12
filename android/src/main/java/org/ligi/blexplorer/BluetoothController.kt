@@ -26,7 +26,7 @@ internal class BluetoothController(context: Context) {
 
     private val deviceMap: MutableMap<BluetoothDevice, DeviceInfo> = ArrayMap()
 
-    internal fun getScanResult(device : BluetoothDevice) = deviceMap[device]
+    internal fun getDeviceInfo(device : BluetoothDevice) = deviceMap[device]
 
     internal fun getConnection(rxbleDevice : RxBleDevice) : Observable<RxBleConnection> {
         val deviceInfo = deviceMap[rxbleDevice.bluetoothDevice] as DeviceInfo
