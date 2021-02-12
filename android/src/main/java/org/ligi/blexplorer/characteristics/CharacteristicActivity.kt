@@ -16,10 +16,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
 import com.polidea.rxandroidble2.RxBleConnection
 import com.polidea.rxandroidble2.RxBleDevice
+import com.uber.autodispose.AutoDispose
+import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider
 import de.cketti.shareintentbuilder.ShareIntentBuilder
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -71,24 +74,36 @@ class CharacteristicActivity : AppCompatActivity() {
         val adapter = CharacteristicRecycler()
         binding.contentList.adapter = adapter
 
-        characteristicList = App.service.characteristics
+        val autoDisposable = AutoDispose.autoDisposable<BluetoothGattService>(
+                AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_DESTROY)
+        )
+
+        bluetoothController.getConnection(deviceInfo.scanResult.bleDevice)
+                .flatMapSingle { it.discoverServices() }
+                .flatMapSingle { it.getService(UUID.fromString(serviceUUID)) }
+                .observeOn(AndroidSchedulers.mainThread())
+                .`as`(autoDisposable)
+                .subscribe {
+                    characteristicList = it.characteristics
+                    adapter.notifyDataSetChanged()
+                }
 
         device.connectGatt(this, true, object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                 App.gatt = gatt
-                gatt.discoverServices()
+//                gatt.discoverServices()
                 super.onConnectionStateChange(gatt, status, newState)
             }
 
             override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
                 super.onCharacteristicRead(gatt, characteristic, status)
-                characteristicUpdate(characteristic, adapter)
+//                characteristicUpdate(characteristic, adapter)
 
             }
 
             override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
                 super.onCharacteristicChanged(gatt, characteristic)
-                characteristicUpdate(characteristic, adapter)
+//                characteristicUpdate(characteristic, adapter)
             }
         })
     }
