@@ -40,8 +40,6 @@ import java.util.*
 
 
 class CharacteristicActivity : AppCompatActivity() {
-
-    private var characteristicList: MutableList<BluetoothGattCharacteristic> = ArrayList()
     private lateinit var binding : ActivityWithRecyclerBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,7 +82,7 @@ class CharacteristicActivity : AppCompatActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .`as`(autoDisposable)
                 .subscribe {
-                    characteristicList = it.characteristics
+                    adapter.characteristicList = it.characteristics
                     adapter.notifyDataSetChanged()
                 }
 
@@ -108,24 +106,24 @@ class CharacteristicActivity : AppCompatActivity() {
         })
     }
 
-    private fun characteristicUpdate(characteristic: BluetoothGattCharacteristic, adapter: CharacteristicRecycler) {
-        var found: BluetoothGattCharacteristic? = null
-        for (bluetoothGattCharacteristic in characteristicList) {
-            if (bluetoothGattCharacteristic.uuid == characteristic.uuid) {
-                found = bluetoothGattCharacteristic
-            }
-        }
-
-        if (found == null) {
-            characteristicList.add(characteristic)
-            adapter.notifyDataSetChanged()
-        } else {
-            val index = characteristicList.indexOf(found)
-            characteristicList[index] = characteristic
-            runOnUiThread { adapter.notifyItemChanged(index) }
-
-        }
-    }
+//    private fun characteristicUpdate(characteristic: BluetoothGattCharacteristic, adapter: CharacteristicRecycler) {
+//        var found: BluetoothGattCharacteristic? = null
+//        for (bluetoothGattCharacteristic in characteristicList) {
+//            if (bluetoothGattCharacteristic.uuid == characteristic.uuid) {
+//                found = bluetoothGattCharacteristic
+//            }
+//        }
+//
+//        if (found == null) {
+//            characteristicList.add(characteristic)
+//            adapter.notifyDataSetChanged()
+//        } else {
+//            val index = characteristicList.indexOf(found)
+//            characteristicList[index] = characteristic
+//            runOnUiThread { adapter.notifyItemChanged(index) }
+//
+//        }
+//    }
 
     private val serviceName: String
         get() = DevicePropertiesDescriber.getServiceName(App.service, App.service.uuid.toString())
@@ -133,23 +131,6 @@ class CharacteristicActivity : AppCompatActivity() {
     override fun onPause() {
         App.gatt?.disconnect()
         super.onPause()
-    }
-
-
-    private inner class CharacteristicRecycler : RecyclerView.Adapter<CharacteristicViewHolder>() {
-        override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): CharacteristicViewHolder {
-            val layoutInflater = LayoutInflater.from(viewGroup.context)
-            val binding = ItemCharacteristicBinding.inflate(layoutInflater, viewGroup, false)
-            return CharacteristicViewHolder(binding)
-        }
-
-        override fun onBindViewHolder(deviceViewHolder: CharacteristicViewHolder, i: Int) {
-            deviceViewHolder.applyCharacteristic(characteristicList[i])
-        }
-
-        override fun getItemCount(): Int {
-            return characteristicList.size
-        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -161,6 +142,24 @@ class CharacteristicActivity : AppCompatActivity() {
         fun createIntent(context: Context, device: BluetoothDevice, service: BluetoothGattService): Intent = Intent(context, CharacteristicActivity::class.java)
                 .putExtra(KEY_BLUETOOTH_DEVICE, device)
                 .putExtra(KEY_SERVICE_UUID, service.uuid.toString())
+    }
+}
+
+private class CharacteristicRecycler : RecyclerView.Adapter<CharacteristicViewHolder>() {
+    var characteristicList: List<BluetoothGattCharacteristic> = emptyList()
+
+    override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): CharacteristicViewHolder {
+        val layoutInflater = LayoutInflater.from(viewGroup.context)
+        val binding = ItemCharacteristicBinding.inflate(layoutInflater, viewGroup, false)
+        return CharacteristicViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(deviceViewHolder: CharacteristicViewHolder, i: Int) {
+        deviceViewHolder.applyCharacteristic(characteristicList[i])
+    }
+
+    override fun getItemCount(): Int {
+        return characteristicList.size
     }
 }
 
