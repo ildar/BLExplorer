@@ -148,14 +148,14 @@ class CharacteristicActivity : AppCompatActivity() {
 private class CharacteristicRecycler : RecyclerView.Adapter<CharacteristicViewHolder>() {
     var characteristicList: List<BluetoothGattCharacteristic> = emptyList()
 
-    override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): CharacteristicViewHolder {
+    override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): CharacteristicViewHolder {
         val layoutInflater = LayoutInflater.from(viewGroup.context)
         val binding = ItemCharacteristicBinding.inflate(layoutInflater, viewGroup, false)
         return CharacteristicViewHolder(binding)
     }
 
-    override fun onBindViewHolder(deviceViewHolder: CharacteristicViewHolder, i: Int) {
-        deviceViewHolder.applyCharacteristic(characteristicList[i])
+    override fun onBindViewHolder(deviceViewHolder: CharacteristicViewHolder, position: Int) {
+        deviceViewHolder.applyCharacteristic(characteristicList[position])
     }
 
     override fun getItemCount(): Int {
