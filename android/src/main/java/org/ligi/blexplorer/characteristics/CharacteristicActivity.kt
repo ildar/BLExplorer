@@ -18,6 +18,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.polidea.rxandroidble2.RxBleConnection
 import com.polidea.rxandroidble2.RxBleDevice
@@ -81,10 +83,7 @@ class CharacteristicActivity : AppCompatActivity() {
                 .flatMapSingle { it.getService(UUID.fromString(serviceUUID)) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .`as`(autoDisposable)
-                .subscribe {
-                    adapter.characteristicList = it.characteristics
-                    adapter.notifyDataSetChanged()
-                }
+                .subscribe { adapter.submitList(it.characteristics) }
 
         device.connectGatt(this, true, object : BluetoothGattCallback() {
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
@@ -145,9 +144,7 @@ class CharacteristicActivity : AppCompatActivity() {
     }
 }
 
-private class CharacteristicRecycler : RecyclerView.Adapter<CharacteristicViewHolder>() {
-    var characteristicList: List<BluetoothGattCharacteristic> = emptyList()
-
+private class CharacteristicRecycler : ListAdapter<BluetoothGattCharacteristic, CharacteristicViewHolder>(CharacteristicDiffCallback()) {
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): CharacteristicViewHolder {
         val layoutInflater = LayoutInflater.from(viewGroup.context)
         val binding = ItemCharacteristicBinding.inflate(layoutInflater, viewGroup, false)
@@ -155,12 +152,16 @@ private class CharacteristicRecycler : RecyclerView.Adapter<CharacteristicViewHo
     }
 
     override fun onBindViewHolder(deviceViewHolder: CharacteristicViewHolder, position: Int) {
-        deviceViewHolder.applyCharacteristic(characteristicList[position])
+        deviceViewHolder.applyCharacteristic(getItem(position))
     }
+}
 
-    override fun getItemCount(): Int {
-        return characteristicList.size
-    }
+private class CharacteristicDiffCallback : DiffUtil.ItemCallback<BluetoothGattCharacteristic>() {
+    override fun areItemsTheSame(oldItem: BluetoothGattCharacteristic, newItem: BluetoothGattCharacteristic) =
+            oldItem.uuid == newItem.uuid
+
+    override fun areContentsTheSame(oldItem: BluetoothGattCharacteristic, newItem: BluetoothGattCharacteristic) =
+            Arrays.equals(oldItem.value, newItem.value)
 }
 
 private class ConnectionStateChangeLiveData(private val rxBleDevice: RxBleDevice) : LiveData<RxBleConnection.RxBleConnectionState>() {
