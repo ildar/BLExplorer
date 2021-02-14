@@ -14,5 +14,6 @@
     <string name="exit">Exit</string>
     <string name="device_connect_failed_dialog_text">Failed to connect to device %1$s</string>
     <string name="gatt_characteristic_no_value_msg">no value read yet</string>
+    <string name="characteristic_read_failed_message">Failed to read value of characteristic %1$s</string>
 
 </resources>

@@ -13,6 +13,8 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.annotation.MainThread
+import androidx.annotation.UiThread
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
@@ -64,7 +66,7 @@ class CharacteristicActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         binding.contentList.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
-        val adapter = CharacteristicRecycler()
+        val adapter = CharacteristicRecycler(deviceInfo.scanResult.bleDevice)
         binding.contentList.adapter = adapter
 
         val autoDisposable = AutoDispose.autoDisposable<BluetoothGattService>(
@@ -98,7 +100,7 @@ class CharacteristicActivity : AppCompatActivity() {
     }
 }
 
-private class CharacteristicRecycler : ListAdapter<BluetoothGattCharacteristic, CharacteristicViewHolder>(CharacteristicDiffCallback()) {
+private class CharacteristicRecycler(private val bleDevice: RxBleDevice) : ListAdapter<BluetoothGattCharacteristic, CharacteristicViewHolder>(CharacteristicDiffCallback()) {
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): CharacteristicViewHolder {
         val layoutInflater = LayoutInflater.from(viewGroup.context)
         val binding = ItemCharacteristicBinding.inflate(layoutInflater, viewGroup, false)
@@ -106,7 +108,12 @@ private class CharacteristicRecycler : ListAdapter<BluetoothGattCharacteristic, 
     }
 
     override fun onBindViewHolder(deviceViewHolder: CharacteristicViewHolder, position: Int) {
-        deviceViewHolder.applyCharacteristic(getItem(position))
+        deviceViewHolder.applyCharacteristic(getItem(position), bleDevice)
+    }
+
+    override fun onViewDetachedFromWindow(holder: CharacteristicViewHolder) {
+        super.onViewDetachedFromWindow(holder)
+        holder.viewDetached()
     }
 }
 
@@ -138,16 +145,20 @@ private class ConnectionStateChangeLiveData(private val rxBleDevice: RxBleDevice
 private class CharacteristicViewHolder(private val binding: ItemCharacteristicBinding) : RecyclerView.ViewHolder(binding.root) {
 
     private var characteristic: BluetoothGattCharacteristic? = null
+    private var readValueDisposable : Disposable? = null
 
-    fun applyCharacteristic(characteristic: BluetoothGattCharacteristic) {
+    @MainThread
+    fun viewDetached() {
+        readValueDisposable?.dispose()
+        readValueDisposable = null
+    }
+
+    @MainThread
+    fun applyCharacteristic(characteristic: BluetoothGattCharacteristic, bleDevice: RxBleDevice) {
         this.characteristic = characteristic
         binding.uuid.text = characteristic.uuid.toString()
 
-        if (characteristic.value != null) {
-            binding.value.text = getValue(characteristic)
-        } else {
-            binding.value.text = itemView.context.getString(R.string.gatt_characteristic_no_value_msg)
-        }
+        displayCharacteristicValue(characteristic)
         binding.type.text = DevicePropertiesDescriber.getProperty(characteristic)
         binding.permissions.text = DevicePropertiesDescriber.getPermission(characteristic) + "  " + characteristic.descriptors.size
 
@@ -165,7 +176,13 @@ private class CharacteristicViewHolder(private val binding: ItemCharacteristicBi
         }
 
         binding.read.setOnClickListener {
-            App.gatt.readCharacteristic(characteristic)
+            readValueDisposable = bluetoothController.getConnection(bleDevice)
+                    .flatMapSingle { it.readCharacteristic(characteristic.uuid) }
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe (
+                            { displayCharacteristicValue(characteristic) },
+                            { Toast.makeText(itemView.context, itemView.context.getString(R.string.characteristic_read_failed_message, characteristic.uuid.toString()), Toast.LENGTH_SHORT).show() }
+                    )
         }
 
         binding.share.setOnClickListener {
@@ -198,6 +215,15 @@ private class CharacteristicViewHolder(private val binding: ItemCharacteristicBi
                     Toast.makeText(itemView.context, "Could not write descriptor for notification", Toast.LENGTH_LONG).show()
                 }
             }
+        }
+    }
+
+    @UiThread
+    private fun displayCharacteristicValue(characteristic: BluetoothGattCharacteristic) {
+        if (characteristic.value != null) {
+            binding.value.text = getValue(characteristic)
+        } else {
+            binding.value.text = itemView.context.getString(R.string.gatt_characteristic_no_value_msg)
         }
     }
 
