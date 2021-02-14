@@ -202,12 +202,11 @@ private class CharacteristicViewHolder(private val binding: ItemCharacteristicBi
     }
 
 
-    private fun getValue(characteristic: BluetoothGattCharacteristic): String {
-        return BigInteger(1, characteristic.value).toString(16) +
-                " = " +
-                characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0) +
-                " = " +
-                characteristic.getStringValue(0)
-    }
+    private fun getValue(characteristic: BluetoothGattCharacteristic): String =
+            BigInteger(1, characteristic.value).toString(16) +
+                    " = " +
+                    characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0) +
+                    " = " +
+                    characteristic.getStringValue(0)
 
 }
