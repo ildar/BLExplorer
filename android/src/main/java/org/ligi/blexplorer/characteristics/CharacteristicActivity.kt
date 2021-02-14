@@ -58,11 +58,6 @@ class CharacteristicActivity : AppCompatActivity() {
             return
         }
 
-        ConnectionStateChangeLiveData(deviceInfo.scanResult.bleDevice).observe(this) { newState ->
-            val stateToString = DevicePropertiesDescriber.connectionStateToString(newState, this)
-            supportActionBar?.subtitle = "$serviceName ($stateToString)"
-        }
-
         binding = ActivityWithRecyclerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -81,11 +76,15 @@ class CharacteristicActivity : AppCompatActivity() {
                 .flatMapSingle { it.getService(UUID.fromString(serviceUUID)) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .`as`(autoDisposable)
-                .subscribe { adapter.submitList(it.characteristics) }
+                .subscribe {
+                    val serviceName = DevicePropertiesDescriber.getServiceName(it, it.uuid.toString())
+                    ConnectionStateChangeLiveData(deviceInfo.scanResult.bleDevice).observe(this) { newState ->
+                        val stateToString = DevicePropertiesDescriber.connectionStateToString(newState, this)
+                        supportActionBar?.subtitle = "$serviceName ($stateToString)"
+                    }
+                    adapter.submitList(it.characteristics)
+                }
     }
-
-    private val serviceName: String
-        get() = DevicePropertiesDescriber.getServiceName(App.service, App.service.uuid.toString())
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         finish()
