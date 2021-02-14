@@ -26,7 +26,6 @@ import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import net.steamcrafted.loadtoast.LoadToast
-import org.ligi.blexplorer.App
 import org.ligi.blexplorer.R
 import org.ligi.blexplorer.bluetoothController
 import org.ligi.blexplorer.characteristics.CharacteristicActivity
@@ -138,7 +137,6 @@ private class ServiceViewHolder(private val binding: ItemServiceBinding) : Recyc
 
     fun applyService(device: BluetoothDevice, service: BluetoothGattService) {
         itemView.setOnClickListener { v ->
-            App.service = service
             val intent = CharacteristicActivity.createIntent(v.context, device, service)
             v.context.startActivity(intent)
         }
