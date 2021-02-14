@@ -2,8 +2,6 @@ package org.ligi.blexplorer.characteristics
 
 import android.app.Activity
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
@@ -84,53 +82,10 @@ class CharacteristicActivity : AppCompatActivity() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .`as`(autoDisposable)
                 .subscribe { adapter.submitList(it.characteristics) }
-
-        device.connectGatt(this, true, object : BluetoothGattCallback() {
-            override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-                App.gatt = gatt
-//                gatt.discoverServices()
-                super.onConnectionStateChange(gatt, status, newState)
-            }
-
-            override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
-                super.onCharacteristicRead(gatt, characteristic, status)
-//                characteristicUpdate(characteristic, adapter)
-
-            }
-
-            override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-                super.onCharacteristicChanged(gatt, characteristic)
-//                characteristicUpdate(characteristic, adapter)
-            }
-        })
     }
-
-//    private fun characteristicUpdate(characteristic: BluetoothGattCharacteristic, adapter: CharacteristicRecycler) {
-//        var found: BluetoothGattCharacteristic? = null
-//        for (bluetoothGattCharacteristic in characteristicList) {
-//            if (bluetoothGattCharacteristic.uuid == characteristic.uuid) {
-//                found = bluetoothGattCharacteristic
-//            }
-//        }
-//
-//        if (found == null) {
-//            characteristicList.add(characteristic)
-//            adapter.notifyDataSetChanged()
-//        } else {
-//            val index = characteristicList.indexOf(found)
-//            characteristicList[index] = characteristic
-//            runOnUiThread { adapter.notifyItemChanged(index) }
-//
-//        }
-//    }
 
     private val serviceName: String
         get() = DevicePropertiesDescriber.getServiceName(App.service, App.service.uuid.toString())
-
-    override fun onPause() {
-        App.gatt?.disconnect()
-        super.onPause()
-    }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         finish()
