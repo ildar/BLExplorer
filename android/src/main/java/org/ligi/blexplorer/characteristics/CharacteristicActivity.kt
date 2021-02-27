@@ -169,6 +169,7 @@ private class CharacteristicViewHolder(private val binding: ItemCharacteristicBi
 
     @MainThread
     fun applyCharacteristic(characteristic: BluetoothGattCharacteristic, bleDevice: RxBleDevice) {
+        binding.name.text = DevicePropertiesDescriber.getCharacteristicName(characteristic, binding.root.context.getString(R.string.unknown))
         binding.uuid.text = characteristic.uuid.toString()
 
         displayCharacteristicValue(characteristic)

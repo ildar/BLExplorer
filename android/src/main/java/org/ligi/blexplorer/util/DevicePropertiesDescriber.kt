@@ -94,6 +94,10 @@ object DevicePropertiesDescriber {
         RxBleConnection.RxBleConnectionState.DISCONNECTING -> context.getString(R.string.disconnecting)
         else -> "${context.getString(R.string.unknown_state)} $state"
     }
+
+    fun getCharacteristicName(characteristic: BluetoothGattCharacteristic, defaultString: String): String =
+            StandardUUIDsParser.getCharacteristicName(characteristic.uuid) ?: defaultString
+
     /*
     public static String statusToString(int status) {
         switch (status){
