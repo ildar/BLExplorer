@@ -200,13 +200,12 @@ private class CharacteristicViewHolder(private val binding: ItemCharacteristicBi
 
         binding.share.setOnClickListener {
             val activity = binding.root.context as Activity
-            var text = "characteristic UUID: " + characteristic.uuid.toString() + "\n"
-            text += "service UUID: " + characteristic.service.uuid.toString() + "\n"
+            var text = "characteristic UUID: ${characteristic.uuid}\n"
+            text += "service UUID: ${characteristic.service.uuid}\n"
             if (characteristic.value != null) {
-                text += "value: " + getValue(characteristic)
+                text += "value: ${getValue(characteristic)}"
             }
             activity.startActivity(ShareIntentBuilder.from(activity).text(text).build())
-
         }
 
         binding.notify.setOnCheckedChangeListener { compoundButton, check ->
