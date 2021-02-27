@@ -1,6 +1,5 @@
 package org.ligi.blexplorer.characteristics
 
-import android.app.Activity
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService
@@ -199,13 +198,13 @@ private class CharacteristicViewHolder(private val binding: ItemCharacteristicBi
         }
 
         binding.share.setOnClickListener {
-            val activity = binding.root.context as Activity
+            val context = binding.root.context
             var text = "characteristic UUID: ${characteristic.uuid}\n"
             text += "service UUID: ${characteristic.service.uuid}\n"
             if (characteristic.value != null) {
                 text += "value: ${getValue(characteristic)}"
             }
-            activity.startActivity(ShareIntentBuilder.from(activity).text(text).build())
+            context.startActivity(ShareIntentBuilder.from(context).text(text).build())
         }
 
         binding.notify.setOnCheckedChangeListener { compoundButton, check ->
