@@ -216,25 +216,6 @@ private class CharacteristicViewHolder(private val binding: ItemCharacteristicBi
                 notifyActionDisposable?.dispose()
                 notifyActionDisposable = null
             }
-
-//            if (check) {
-//                if (!App.notifyingCharacteristicsUUids.contains(characteristic.uuid)) {
-//                    App.notifyingCharacteristicsUUids.add(characteristic.uuid)
-//                }
-//            } else {
-//                App.notifyingCharacteristicsUUids.remove(characteristic.uuid)
-//            }
-//
-//            if (!App.gatt.setCharacteristicNotification(characteristic, check)) {
-//                Toast.makeText(itemView.context, "setCharacteristicNotification returned false", Toast.LENGTH_LONG).show()
-//            } else {
-//
-//                val descriptor = characteristic.descriptors[0]
-//                descriptor.value = if (check) BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE else BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
-//                if (!App.gatt.writeDescriptor(descriptor)) {
-//                    Toast.makeText(itemView.context, "Could not write descriptor for notification", Toast.LENGTH_LONG).show()
-//                }
-//            }
         }
     }
 
