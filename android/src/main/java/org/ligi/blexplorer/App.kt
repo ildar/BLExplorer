@@ -1,9 +1,7 @@
 package org.ligi.blexplorer
 
 import android.app.Application
-import android.bluetooth.BluetoothGatt
 import org.ligi.tracedroid.TraceDroid
-import java.util.*
 
 class App : Application() {
     override fun onCreate() {
@@ -11,11 +9,6 @@ class App : Application() {
         super.onCreate()
 
         bluetoothController = BluetoothController(this)
-    }
-
-    companion object {
-        lateinit var gatt: BluetoothGatt
-        var notifyingCharacteristicsUUids: MutableList<UUID> = ArrayList()
     }
 }
 
