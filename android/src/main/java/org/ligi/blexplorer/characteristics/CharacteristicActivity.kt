@@ -77,14 +77,20 @@ class CharacteristicActivity : AppCompatActivity() {
                 .flatMapSingle { it.getService(UUID.fromString(serviceUUID)) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .`as`(autoDisposable)
-                .subscribe {
+                .subscribe(
+                {
                     val serviceName = DevicePropertiesDescriber.getServiceName(it, it.uuid.toString())
                     ConnectionStateChangeLiveData(deviceInfo.scanResult.bleDevice).observe(this) { newState ->
                         val stateToString = DevicePropertiesDescriber.connectionStateToString(newState, this)
                         supportActionBar?.subtitle = "$serviceName ($stateToString)"
                     }
                     adapter.submitList(it.characteristics)
+                },
+                {
+                    Toast.makeText(this@CharacteristicActivity, R.string.characteristic_list_load_error_msg, Toast.LENGTH_SHORT).show()
+                    finish()
                 }
+                )
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
