@@ -17,7 +17,8 @@ import com.polidea.rxandroidble2.scan.ScanSettings
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import org.ligi.blexplorer.util.MyOptional
+import io.reactivex.functions.Action
+import org.ligi.blexplorer.util.AtomicOptional
 import java.util.*
 
 internal class BluetoothController(context: Context) {
@@ -30,13 +31,18 @@ internal class BluetoothController(context: Context) {
 
     internal fun getConnection(rxbleDevice : RxBleDevice) : Observable<RxBleConnection> {
         val deviceInfo = deviceMap[rxbleDevice.bluetoothDevice] as DeviceInfo
-        synchronized(deviceInfo) {
-            val newValue = rxbleDevice.establishConnection(false)
-                    .doOnDispose { synchronized(deviceInfo) { deviceInfo.connection.set(null) } }
-                    .replayingShare()
 
-            return deviceInfo.connection.orElseGet(newValue)
+        val disposeAction = object : Action {
+            lateinit var expected : Observable<RxBleConnection>
+            override fun run() { deviceInfo.connection.compareAndSet(expected, null) }
         }
+        val newValue = rxbleDevice.establishConnection(false)
+                .doOnDispose(disposeAction)
+                .replayingShare()
+
+        disposeAction.expected = newValue
+
+        return deviceInfo.connection.orElseGet(newValue)
     }
 
     fun isBluetoothEnabled() : Boolean {
@@ -93,6 +99,6 @@ internal class BluetoothController(context: Context) {
 
 internal data class DeviceInfo(val scanResult: ScanResult) {
     val last_seen: Long = System.currentTimeMillis()
-    val connection = MyOptional<Observable<RxBleConnection>>()
+    val connection = AtomicOptional<Observable<RxBleConnection>>()
 }
 
