@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.ViewGroup
@@ -35,6 +34,7 @@ import org.ligi.blexplorer.util.DevicePropertiesDescriber
 import org.ligi.blexplorer.util.KEY_BLUETOOTH_DEVICE
 import org.ligi.snackengage.SnackEngage
 import org.ligi.snackengage.snacks.DefaultRateSnack
+import timber.log.Timber
 
 
 class DeviceServiceExploreActivity : AppCompatActivity() {
@@ -94,7 +94,7 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
                             loadToast.success()
                         },
                         { throwable ->
-                            Log.e("ble_discover_services", "Failed to discover services for device ${rxbleDevice.bluetoothDevice.name}", throwable)
+                            Timber.e(throwable, "Failed to discover services for device ${rxbleDevice.bluetoothDevice.name}")
                             supportFragmentManager.beginTransaction().add(ExitOnDismissAlertDialog(rxbleDevice), ExitOnDismissAlertDialog.TAG).commit()
                         }
                 )

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.Context
-import android.util.Log
 import androidx.collection.ArrayMap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -19,6 +18,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Action
 import org.ligi.blexplorer.util.AtomicOptional
+import timber.log.Timber
 import java.util.*
 
 internal class BluetoothController(context: Context) {
@@ -84,7 +84,7 @@ internal class BluetoothController(context: Context) {
                                         value = deviceMap.values.toList()
                                     },
                                     {
-                                        Log.e("bluetooth_scan", "Exception occurred while scanning for BLE devices", it)
+                                        Timber.e(it,"Exception occurred while scanning for BLE devices")
                                     })
                         } else {
                             scanDisposable?.dispose()

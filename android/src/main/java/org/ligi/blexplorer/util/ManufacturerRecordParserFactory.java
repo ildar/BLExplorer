@@ -8,6 +8,8 @@ import android.util.SparseArray;
 
 import java.math.BigInteger;
 
+import timber.log.Timber;
+
 public final class ManufacturerRecordParserFactory {
 
     private static final String TAG = "ManufacturerParser";
@@ -55,7 +57,7 @@ public final class ManufacturerRecordParserFactory {
 
         int companyIdentifierCode = parserObject.getCompanyIdentifierCode();
         if (mParserTemplates.get(companyIdentifierCode) != null) {
-            Log.e(TAG, "Can't add the same (" + companyIdentifierCode + ") parser twice");
+            Timber.e("Can't add the same (" + companyIdentifierCode + ") parser twice");
             return;
         }
         mParserTemplates.put(companyIdentifierCode, Parser);
