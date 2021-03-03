@@ -68,10 +68,7 @@ public final class ManufacturerRecordParserFactory {
             return null;
         }
         try {
-            ManufacturerParserBase parser = parserClass.newInstance();
-            if (parser == null)
-                return null;
-            return parser;
+            return parserClass.newInstance();
         } catch (InstantiationException e) {
             e.printStackTrace();
             return null;
