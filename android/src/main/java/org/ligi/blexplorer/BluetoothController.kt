@@ -83,9 +83,8 @@ internal class BluetoothController(context: Context) {
                                         deviceMap[device] = DeviceInfo(it)
                                         value = deviceMap.values.toList()
                                     },
-                                    {
-                                        Timber.e(it,"Exception occurred while scanning for BLE devices")
-                                    })
+                                    { Timber.e(it,"Exception occurred while scanning for BLE devices") }
+                                    )
                         } else {
                             scanDisposable?.dispose()
 //                            deviceMap.clear()
