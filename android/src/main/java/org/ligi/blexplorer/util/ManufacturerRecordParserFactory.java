@@ -12,8 +12,6 @@ import timber.log.Timber;
 
 public final class ManufacturerRecordParserFactory {
 
-    private static final String TAG = "ManufacturerParser";
-
     private final SparseArray<Class<? extends ManufacturerParserBase>> mParserTemplates =
             new SparseArray<>();
 
