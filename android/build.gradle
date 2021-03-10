@@ -58,6 +58,7 @@ android {
 
         dev {
             dimension "build"
+            resConfigs "en"
         }
 
         prod {
