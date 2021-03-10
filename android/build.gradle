@@ -58,7 +58,6 @@ android {
 
         dev {
             dimension "build"
-            minSdkVersion 21
         }
 
         prod {
