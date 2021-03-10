@@ -73,6 +73,7 @@ internal class BluetoothController(context: Context) {
 
         init {
             shouldScanObservable.observeOn(AndroidSchedulers.mainThread())
+                    .distinctUntilChanged()
                     .subscribe { shouldScan ->
                         if(shouldScan) {
                             val scanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build()
