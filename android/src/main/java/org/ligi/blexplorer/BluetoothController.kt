@@ -1,12 +1,9 @@
 package org.ligi.blexplorer
 
-import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import androidx.collection.ArrayMap
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.jakewharton.rx.replayingShare
 import com.polidea.rxandroidble2.RxBleClient
 import com.polidea.rxandroidble2.RxBleConnection
@@ -17,6 +14,7 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Action
+import io.reactivex.subjects.PublishSubject
 import org.ligi.blexplorer.util.AtomicOptional
 import timber.log.Timber
 import java.util.*
@@ -55,45 +53,44 @@ internal class BluetoothController(context: Context) {
                                                      .replay(1)
                                                      .autoConnect()
 
-    internal val deviceListLiveData : LiveData<List<DeviceInfo>> = DeviceListLiveData()
-
-    @SuppressLint("CheckResult")
-    private inner class DeviceListLiveData : MutableLiveData<List<DeviceInfo>>() {
-        private val shouldScanObservable : Observable<Boolean> = bluetoothStateEvents.map { state ->
-            return@map when(state) {
-                RxBleClient.State.BLUETOOTH_NOT_ENABLED,
-                RxBleClient.State.BLUETOOTH_NOT_AVAILABLE,
-                RxBleClient.State.LOCATION_PERMISSION_NOT_GRANTED,
-                RxBleClient.State.LOCATION_SERVICES_NOT_ENABLED -> false
-                RxBleClient.State.READY -> true
-            }
+    private val shouldScanObservable : Observable<Boolean> = bluetoothStateEvents.map { state ->
+        return@map when(state) {
+            RxBleClient.State.BLUETOOTH_NOT_ENABLED,
+            RxBleClient.State.BLUETOOTH_NOT_AVAILABLE,
+            RxBleClient.State.LOCATION_PERMISSION_NOT_GRANTED,
+            RxBleClient.State.LOCATION_SERVICES_NOT_ENABLED -> false
+            RxBleClient.State.READY -> true
         }
+    }
 
-        private var scanDisposable : Disposable? = null
+    private var scanDisposable : Disposable? = null
 
-        init {
-            shouldScanObservable.observeOn(AndroidSchedulers.mainThread())
-                    .distinctUntilChanged()
-                    .subscribe { shouldScan ->
-                        if(shouldScan) {
-                            val scanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build()
-                            scanDisposable = rxBleClient.scanBleDevices(scanSettings)
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribe({
+    private val deviceListSubject = PublishSubject.create<List<DeviceInfo>>()
+
+    internal val deviceListObservable : Observable<List<DeviceInfo>> = deviceListSubject.replay(1).autoConnect()
+
+    init {
+        shouldScanObservable.observeOn(AndroidSchedulers.mainThread())
+                .distinctUntilChanged()
+                .subscribe { shouldScan ->
+                    if(shouldScan) {
+                        val scanSettings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build()
+                        scanDisposable = rxBleClient.scanBleDevices(scanSettings)
+                                .subscribe(
+                                    {
                                         val device = it.bleDevice.bluetoothDevice
                                         deviceMap[device] = DeviceInfo(it)
-                                        value = deviceMap.values.toList()
+                                        deviceListSubject.onNext(deviceMap.values.toList())
                                     },
                                     { Timber.e(it,"Exception occurred while scanning for BLE devices") }
-                                    )
-                        } else {
-                            scanDisposable?.dispose()
+                                )
+                    } else {
+                        scanDisposable?.dispose()
 //                            deviceMap.clear()
 //                            value = emptyList()
-                            scanDisposable = null
-                        }
+                        scanDisposable = null
                     }
-        }
+                }
     }
 }
 

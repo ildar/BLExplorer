@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.polidea.rxandroidble2.RxBleClient
 import io.reactivex.BackpressureStrategy
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import org.ligi.blexplorer.DeviceInfo
 import org.ligi.blexplorer.HelpActivity
@@ -51,7 +52,7 @@ class DeviceListActivity : AppCompatActivity() {
         binding.contentList.adapter = adapter
 
         viewModel = ViewModelProvider(this).get(DeviceListViewModel::class.java)
-        viewModel.deviceListData.observe(this) { adapter.submitList(it) }
+        viewModel.deviceListLiveData.observe(this) { adapter.submitList(it) }
         viewModel.bluetoothStateLiveData.observe(this) { state ->
             @Suppress("NON_EXHAUSTIVE_WHEN")
             when(state) {
@@ -93,8 +94,29 @@ private class DeviceListDiffCallback : DiffUtil.ItemCallback<DeviceInfo>() {
 }
 
 class DeviceListViewModel : ViewModel() {
-    internal val deviceListData : LiveData<List<DeviceInfo>> = bluetoothController.deviceListLiveData
+    private val deviceListData = DeviceListLiveData()
+    internal val deviceListLiveData : LiveData<List<DeviceInfo>> = deviceListData
     internal val bluetoothStateLiveData : LiveData<RxBleClient.State> = BluetoothStateChangeLiveData()
+
+    override fun onCleared() {
+        super.onCleared()
+        deviceListData.onCleared()
+    }
+}
+
+private class DeviceListLiveData : LiveData<List<DeviceInfo>>() {
+    private lateinit var disposable : Disposable
+
+    init {
+        disposable = bluetoothController.deviceListObservable
+                .toFlowable(BackpressureStrategy.LATEST)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { value = it }
+    }
+
+    fun onCleared() {
+        disposable.dispose()
+    }
 }
 
 private class BluetoothStateChangeLiveData : LiveData<RxBleClient.State>() {
