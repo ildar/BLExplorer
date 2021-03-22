@@ -1,10 +1,10 @@
 package org.ligi.blexplorer
 
-import android.app.Application
+import androidx.multidex.MultiDexApplication
 import org.ligi.tracedroid.TraceDroid
 import timber.log.Timber
 
-class App : Application() {
+class App : MultiDexApplication() {
     override fun onCreate() {
         TraceDroid.init(this)
         super.onCreate()
