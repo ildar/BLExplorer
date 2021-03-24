@@ -105,14 +105,10 @@ class DeviceListViewModel : ViewModel() {
 }
 
 private class DeviceListLiveData : LiveData<List<DeviceInfo>>() {
-    private lateinit var disposable : Disposable
-
-    init {
-        disposable = bluetoothController.deviceListObservable
-                .toFlowable(BackpressureStrategy.LATEST)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { value = it }
-    }
+    private var disposable : Disposable = bluetoothController.deviceListObservable
+            .toFlowable(BackpressureStrategy.LATEST)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { value = it }
 
     fun onCleared() {
         disposable.dispose()
