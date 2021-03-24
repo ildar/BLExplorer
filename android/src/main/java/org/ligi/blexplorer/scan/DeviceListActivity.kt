@@ -1,5 +1,7 @@
 package org.ligi.blexplorer.scan
 
+import android.Manifest
+import android.app.Dialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
@@ -9,7 +11,12 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -53,6 +60,8 @@ class DeviceListActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this).get(DeviceListViewModel::class.java)
         viewModel.deviceListLiveData.observe(this) { adapter.submitList(it) }
+
+        val requestLocPermLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
         viewModel.bluetoothStateLiveData.observe(this) { state ->
             @Suppress("NON_EXHAUSTIVE_WHEN")
             when(state) {
@@ -61,6 +70,11 @@ class DeviceListActivity : AppCompatActivity() {
                         val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                         startActivity(enableBtIntent)
                     }
+                }
+                RxBleClient.State.LOCATION_PERMISSION_NOT_GRANTED -> {
+                    if(ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION))
+                    { LocPermExplanationDialog(requestLocPermLauncher).show(supportFragmentManager, null) }
+                    else { requestLocPermLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION) }
                 }
             }
         }
@@ -74,6 +88,15 @@ class DeviceListActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         startActivity(Intent(this, HelpActivity::class.java))
         return super.onOptionsItemSelected(item)
+    }
+}
+
+class LocPermExplanationDialog(private val requestLocPermLauncher: ActivityResultLauncher<String>) : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return AlertDialog.Builder(requireContext())
+                .setMessage(R.string.loc_perm_explanation)
+                .setPositiveButton(android.R.string.ok) { _,_ ->requestLocPermLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)  }
+                .create()
     }
 }
 
