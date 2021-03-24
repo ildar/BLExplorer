@@ -19,5 +19,7 @@
     <string name="unknown">Unknown</string>
     <string name="characteristic_list_load_error_msg">Error occurred when attempting to get service/characteristic info</string>
     <string name="loc_perm_explanation">Android requires apps to have the location permission to discover Bluetooth devices</string>
+    <string name="loc_service_enable_dialog_msg">Location services need to be enabled to scan for Bluetooth devices</string>
+    <string name="open_location_settings">Open location settings</string>
 
 </resources>

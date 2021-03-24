@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.Menu
@@ -76,6 +77,9 @@ class DeviceListActivity : AppCompatActivity() {
                     { LocPermExplanationDialog(requestLocPermLauncher).show(supportFragmentManager, null) }
                     else { requestLocPermLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION) }
                 }
+                RxBleClient.State.LOCATION_SERVICES_NOT_ENABLED -> {
+                    LocServiceEnableDialog().show(supportFragmentManager, null)
+                }
             }
         }
     }
@@ -96,6 +100,18 @@ class LocPermExplanationDialog(private val requestLocPermLauncher: ActivityResul
         return AlertDialog.Builder(requireContext())
                 .setMessage(R.string.loc_perm_explanation)
                 .setPositiveButton(android.R.string.ok) { _,_ ->requestLocPermLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)  }
+                .create()
+    }
+}
+
+class LocServiceEnableDialog : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return AlertDialog.Builder(requireContext())
+                .setMessage(R.string.loc_service_enable_dialog_msg)
+                .setPositiveButton(R.string.open_location_settings) { _, _ ->
+                    val enableLocationIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                    startActivity(enableLocationIntent)
+                }.setNegativeButton(android.R.string.cancel) { _,_ -> }
                 .create()
     }
 }
