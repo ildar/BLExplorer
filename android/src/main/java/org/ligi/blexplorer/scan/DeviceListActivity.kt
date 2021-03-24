@@ -59,7 +59,7 @@ class DeviceListActivity : AppCompatActivity() {
                 RxBleClient.State.BLUETOOTH_NOT_ENABLED -> {
                     if (!bluetoothController.isBluetoothEnabled()) {
                         val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-                        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+                        startActivity(enableBtIntent)
                     }
                 }
             }
@@ -75,11 +75,6 @@ class DeviceListActivity : AppCompatActivity() {
         startActivity(Intent(this, HelpActivity::class.java))
         return super.onOptionsItemSelected(item)
     }
-
-    companion object {
-        private const val REQUEST_ENABLE_BT = 2300
-    }
-
 }
 
 private class DeviceListDiffCallback : DiffUtil.ItemCallback<DeviceInfo>() {
