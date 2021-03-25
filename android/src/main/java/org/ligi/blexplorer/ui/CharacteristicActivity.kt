@@ -91,6 +91,10 @@ class CharacteristicActivity : AppCompatActivity() {
                     finish()
                 }
                 )
+
+        supportFragmentManager.beginTransaction()
+                .add(ExitActivityOnBluetoothDisable(), null)
+                .commit()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

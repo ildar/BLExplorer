@@ -28,7 +28,6 @@ import org.ligi.blexplorer.R
 import org.ligi.blexplorer.bluetoothController
 import org.ligi.blexplorer.databinding.ActivityWithRecyclerBinding
 import org.ligi.blexplorer.databinding.ItemServiceBinding
-import org.ligi.blexplorer.ui.CharacteristicActivity
 import org.ligi.blexplorer.util.DevicePropertiesDescriber
 import org.ligi.blexplorer.util.KEY_BLUETOOTH_DEVICE
 import org.ligi.snackengage.SnackEngage
@@ -101,6 +100,10 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
                             supportFragmentManager.beginTransaction().add(ExitOnDismissAlertDialog(rxbleDevice), ExitOnDismissAlertDialog.TAG).commit()
                         }
                 )
+
+        supportFragmentManager.beginTransaction()
+                .add(ExitActivityOnBluetoothDisable(), null)
+                .commit()
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
