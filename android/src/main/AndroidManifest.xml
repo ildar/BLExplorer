@@ -17,15 +17,14 @@
             android:theme="@style/AppTheme">
 
         <activity android:name=".HelpActivity"/>
-        <activity android:name=".services.DeviceServiceExploreActivity"/>
-        <activity android:name=".characteristics.CharacteristicActivity"/>
+        <activity android:name=".ui.DeviceServiceExploreActivity"/>
+        <activity android:name=".ui.CharacteristicActivity"/>
 
         <activity
-                android:name=".scan.DeviceListActivity"
+                android:name=".ui.DeviceListActivity"
                 android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>

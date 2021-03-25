@@ -1,4 +1,4 @@
-package org.ligi.blexplorer.scan
+package org.ligi.blexplorer.ui
 
 import android.Manifest
 import android.app.Dialog
@@ -35,7 +35,6 @@ import org.ligi.blexplorer.R
 import org.ligi.blexplorer.bluetoothController
 import org.ligi.blexplorer.databinding.ActivityWithRecyclerBinding
 import org.ligi.blexplorer.databinding.ItemDeviceBinding
-import org.ligi.blexplorer.services.DeviceServiceExploreActivity
 import org.ligi.blexplorer.util.DevicePropertiesDescriber
 import org.ligi.blexplorer.util.ManufacturerRecordParserFactory
 import org.ligi.tracedroid.sending.TraceDroidEmailSender

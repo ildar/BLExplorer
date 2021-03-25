@@ -1,4 +1,4 @@
-package org.ligi.blexplorer.services
+package org.ligi.blexplorer.ui
 
 import android.app.Dialog
 import android.bluetooth.BluetoothDevice
@@ -26,9 +26,9 @@ import io.reactivex.disposables.Disposable
 import net.steamcrafted.loadtoast.LoadToast
 import org.ligi.blexplorer.R
 import org.ligi.blexplorer.bluetoothController
-import org.ligi.blexplorer.characteristics.CharacteristicActivity
 import org.ligi.blexplorer.databinding.ActivityWithRecyclerBinding
 import org.ligi.blexplorer.databinding.ItemServiceBinding
+import org.ligi.blexplorer.ui.CharacteristicActivity
 import org.ligi.blexplorer.util.DevicePropertiesDescriber
 import org.ligi.blexplorer.util.KEY_BLUETOOTH_DEVICE
 import org.ligi.snackengage.SnackEngage
