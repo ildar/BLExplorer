@@ -18,7 +18,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.polidea.rxandroidble2.RxBleDevice
-import com.polidea.rxandroidble2.RxBleDeviceServices
 import com.uber.autodispose.AutoDispose
 import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider
 import io.reactivex.Completable
@@ -74,9 +73,12 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
 
         val loadToast = LoadToast(this)
 
-        val autoDisposable = AutoDispose.autoDisposable<RxBleDeviceServices>(
-                AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_DESTROY)
-        )
+        val actDestScopeProvider = AndroidLifecycleScopeProvider.from(this, Lifecycle.Event.ON_DESTROY)
+
+        //keeping the BLE device connection open so that actions in CharacteristicActivity are faster
+        bluetoothController.getConnection(rxbleDevice)
+                .`as`(AutoDispose.autoDisposable(actDestScopeProvider))
+                .subscribe({}, {})
 
         gattServicesListDisposable = Completable.fromAction { loadToast.setText(getString(R.string.connecting)).show() }
                 .subscribeOn(AndroidSchedulers.mainThread())
@@ -88,7 +90,7 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
                 }.flatMapSingle { it.discoverServices() }
                 .take(1)
                 .observeOn(AndroidSchedulers.mainThread())
-                .`as`(autoDisposable)
+                .`as`(AutoDispose.autoDisposable(actDestScopeProvider))
                 .subscribe(
                         { services ->
                             adapter.submitList(services.bluetoothGattServices)
