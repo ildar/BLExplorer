@@ -86,6 +86,7 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
                     Completable.fromAction { loadToast.setText(getString(R.string.discovering)) }
                             .subscribeOn(AndroidSchedulers.mainThread()).subscribe()
                 }.flatMapSingle { it.discoverServices() }
+                .take(1)
                 .observeOn(AndroidSchedulers.mainThread())
                 .`as`(autoDisposable)
                 .subscribe(
