@@ -127,7 +127,7 @@ private class CharacteristicRecycler(private val bleDevice: RxBleDevice) : ListA
 
     override fun onViewAttachedToWindow(holder: CharacteristicViewHolder) {
         super.onViewAttachedToWindow(holder)
-        val itemPos = holder.adapterPosition
+        val itemPos = holder.bindingAdapterPosition
         if(itemPos != RecyclerView.NO_POSITION) {
             holder.viewAttached(getItem(itemPos), bleDevice)
         }
