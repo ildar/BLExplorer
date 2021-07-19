@@ -49,7 +49,7 @@ class DeviceListActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        TraceDroidEmailSender.sendStackTraces("ligi@ligi.de", this)
+        TraceDroidEmailSender.sendStackTraces(BUG_REPORT_EMAIL, this)
 
         binding = ActivityWithRecyclerBinding.inflate(layoutInflater)
         setContentView(binding.root)

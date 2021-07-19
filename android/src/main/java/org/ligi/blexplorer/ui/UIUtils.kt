@@ -10,6 +10,8 @@ import io.reactivex.BackpressureStrategy
 import io.reactivex.android.schedulers.AndroidSchedulers
 import org.ligi.blexplorer.bluetoothController
 
+internal const val BUG_REPORT_EMAIL = "sandy.8925@gmail.com"
+
 class ExitActivityOnBluetoothDisable : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
