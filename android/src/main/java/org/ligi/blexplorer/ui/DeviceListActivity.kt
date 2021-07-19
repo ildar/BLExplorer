@@ -190,14 +190,8 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
                 .map { manufacturerSpecificData.keyAt(it) }
                 .forEach {key ->
                     val p = ManufacturerRecordParserFactory.parse(key, manufacturerSpecificData.get(key), device)
-                    if (p == null) {
-                        scanRecordStr.append("$key=${BigInteger(1, manufacturerSpecificData.get(key)).toString(16)}\n")
-                    } else {
-                        scanRecordStr.append("${p.keyDescriptor} = {\n$p}\n")
-                        if (!TextUtils.isEmpty(p.getName(device))) {
-                            binding.name.text = p.getName(device)
-                        }
-                    }
+                    if (p == null) { scanRecordStr.append("$key=${BigInteger(1, manufacturerSpecificData.get(key)).toString(16)}\n") }
+                    else { scanRecordStr.append("${p.keyDescriptor} = {\n$p}\n") }
                 }
 
         for (parcelUuid in scanRecord.serviceData.keys) {
