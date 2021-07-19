@@ -22,5 +22,6 @@
     <string name="loc_service_enable_dialog_msg">Location services need to be enabled to scan for Bluetooth devices</string>
     <string name="open_location_settings">Open location settings</string>
     <string name="device_name_missing_placeholder_string">no name</string>
-
+    <string name="rssi_string">%1$d db</string>
+    <string name="last_seen_string">%1$d sec</string>
 </resources>
