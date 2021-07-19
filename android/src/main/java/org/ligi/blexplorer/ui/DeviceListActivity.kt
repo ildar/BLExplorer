@@ -170,7 +170,7 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
 
     fun applyDevice(newDeviceInfo: DeviceInfo) {
         device = newDeviceInfo.scanResult.bleDevice.bluetoothDevice
-        binding.name.text = if (TextUtils.isEmpty(device.name)) "no name" else device.name
+        binding.name.text = if (TextUtils.isEmpty(device.name)) itemView.context.getString(R.string.device_name_missing_placeholder_string) else device.name
         binding.rssi.text = "${newDeviceInfo.scanResult.rssi}db"
         binding.lastSeen.text = "${(System.currentTimeMillis() - newDeviceInfo.last_seen) / 1000}s"
         binding.address.text = device.address

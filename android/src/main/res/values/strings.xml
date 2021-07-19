@@ -21,5 +21,6 @@
     <string name="loc_perm_explanation">Android requires apps to have the location permission to discover Bluetooth devices</string>
     <string name="loc_service_enable_dialog_msg">Location services need to be enabled to scan for Bluetooth devices</string>
     <string name="open_location_settings">Open location settings</string>
+    <string name="device_name_missing_placeholder_string">no name</string>
 
 </resources>
