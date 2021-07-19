@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.polidea.rxandroidble2.RxBleClient
+import com.polidea.rxandroidble2.scan.ScanRecord
 import io.reactivex.BackpressureStrategy
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -170,36 +171,15 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
 
     fun applyDevice(newDeviceInfo: DeviceInfo) {
         device = newDeviceInfo.scanResult.bleDevice.bluetoothDevice
-        binding.name.text = if (TextUtils.isEmpty(device.name)) itemView.context.getString(R.string.device_name_missing_placeholder_string) else device.name
-        binding.rssi.text =  itemView.context.getString(R.string.rssi_string, newDeviceInfo.scanResult.rssi)
+        binding.name.text =
+            if (TextUtils.isEmpty(device.name)) itemView.context.getString(R.string.device_name_missing_placeholder_string) else device.name
+        binding.rssi.text =
+            itemView.context.getString(R.string.rssi_string, newDeviceInfo.scanResult.rssi)
         val lastSeenDuration = (System.currentTimeMillis() - newDeviceInfo.last_seen) / 1000
-        binding.lastSeen.text = itemView.context.getString(R.string.last_seen_string, lastSeenDuration)
+        binding.lastSeen.text =
+            itemView.context.getString(R.string.last_seen_string, lastSeenDuration)
         binding.address.text = device.address
-
-        val scanRecord = newDeviceInfo.scanResult.scanRecord
-        val scanRecordStr = StringBuilder()
-        scanRecord.serviceUuids?.let { uuids ->
-            for (parcelUuid in uuids) {
-                scanRecordStr.append("$parcelUuid\n")
-            }
-        }
-
-        val manufacturerSpecificData = scanRecord.manufacturerSpecificData
-
-        (0 until manufacturerSpecificData.size())
-                .map { manufacturerSpecificData.keyAt(it) }
-                .forEach {key ->
-                    val p = ManufacturerRecordParserFactory.parse(key, manufacturerSpecificData.get(key), device)
-                    if (p == null) { scanRecordStr.append("$key=${BigInteger(1, manufacturerSpecificData.get(key)).toString(16)}\n") }
-                    else { scanRecordStr.append("${p.keyDescriptor} = {\n$p}\n") }
-                }
-
-        for (parcelUuid in scanRecord.serviceData.keys) {
-            scanRecordStr.append("$parcelUuid=${BigInteger(1, scanRecord.serviceData[parcelUuid]).toString(16)}\n")
-        }
-
-        binding.scanRecord.text = scanRecordStr.toString()
-
+        binding.scanRecord.text = parseScanRecord(newDeviceInfo.scanResult.scanRecord, device)
         binding.type.text = DevicePropertiesDescriber.describeType(device)
         binding.bondstate.text = DevicePropertiesDescriber.describeBondState(device)
     }
@@ -210,6 +190,51 @@ private class DeviceViewHolder(private val binding: ItemDeviceBinding) : Recycle
             it.context.startActivity(intent)
         }
     }
+}
+
+private fun parseScanRecord(scanRecord: ScanRecord, device: BluetoothDevice): String {
+    val scanRecordStr = StringBuilder()
+    scanRecord.serviceUuids?.let { uuids ->
+        for (parcelUuid in uuids) {
+            scanRecordStr.append("$parcelUuid\n")
+        }
+    }
+
+    val manufacturerSpecificData = scanRecord.manufacturerSpecificData
+
+    (0 until manufacturerSpecificData.size())
+        .map { manufacturerSpecificData.keyAt(it) }
+        .forEach { key ->
+            val p = ManufacturerRecordParserFactory.parse(
+                key,
+                manufacturerSpecificData.get(key),
+                device
+            )
+            if (p == null) {
+                scanRecordStr.append(
+                    "$key=${
+                        BigInteger(
+                            1,
+                            manufacturerSpecificData.get(key)
+                        ).toString(16)
+                    }\n"
+                )
+            } else {
+                scanRecordStr.append("${p.keyDescriptor} = {\n$p}\n")
+            }
+        }
+
+    for (parcelUuid in scanRecord.serviceData.keys) {
+        scanRecordStr.append(
+            "$parcelUuid=${
+                BigInteger(
+                    1,
+                    scanRecord.serviceData[parcelUuid]
+                ).toString(16)
+            }\n"
+        )
+    }
+    return scanRecordStr.toString()
 }
 
 private class DeviceRecycler : ListAdapter<DeviceInfo, DeviceViewHolder>(DeviceListDiffCallback()) {
