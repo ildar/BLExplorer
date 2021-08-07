@@ -48,7 +48,7 @@ class DeviceServiceExploreActivity : AppCompatActivity() {
             finish()
             return
         }
-        device = intent.getParcelableExtra(KEY_BLUETOOTH_DEVICE)
+        device = intent.getParcelableExtra<BluetoothDevice>(KEY_BLUETOOTH_DEVICE) as BluetoothDevice
 
         binding = ActivityWithRecyclerBinding.inflate(layoutInflater)
         setContentView(binding.root)

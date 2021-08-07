@@ -50,7 +50,7 @@ class CharacteristicActivity : AppCompatActivity() {
             finish()
             return
         }
-        val device = intent.getParcelableExtra<BluetoothDevice>(KEY_BLUETOOTH_DEVICE)
+        val device = intent.getParcelableExtra<BluetoothDevice>(KEY_BLUETOOTH_DEVICE) as BluetoothDevice
         val serviceUUID = intent.getStringExtra(KEY_SERVICE_UUID)
 
         val deviceInfo = bluetoothController.getDeviceInfo(device)
